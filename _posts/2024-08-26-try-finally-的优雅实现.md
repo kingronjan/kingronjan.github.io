@@ -2,6 +2,8 @@
 layout: post
 title: try...finally..的优雅实现
 date: 2024-08-26 21:35 +0800
+categories: [python]
+tags: [python, exception]
 ---
 
 
@@ -72,7 +74,7 @@ except TypeError:
 
 执行结果为：
 
-```pythonthon
+```python
 Traceback (most recent call last):
   File "<ipython-input-4-189a22d65266>", line 8, in <module>
     type_err()
