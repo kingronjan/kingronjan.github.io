@@ -45,6 +45,18 @@ $ bundle
 
 Please see the [theme's docs](https://github.com/cotes2020/jekyll-theme-chirpy#documentation).
 
+
+Serve on local:
+```
+bundle exec jekyll serve
+```
+
+Post file (More usage see: [jekyll/jekyll-compose: :memo: Streamline your writing in Jekyll with these commands.](https://github.com/jekyll/jekyll-compose)):
+```
+jekyll post "Hello world"
+```
+
+
 ## Contributing
 
 The contents of this repository are automatically updated when new releases are made to the [main repository][chirpy].  
