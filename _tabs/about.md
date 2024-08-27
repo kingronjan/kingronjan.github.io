@@ -4,8 +4,7 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-> Add Markdown syntax content to file `_tabs/about.md`{: .filepath } and it will show up on this page.
-{: .prompt-tip }
+#### About
 
 博客内容主要集中于 python，数据同步，也包含一些数据采集和运维的主题。
 
