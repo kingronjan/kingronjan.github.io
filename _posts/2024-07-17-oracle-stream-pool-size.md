@@ -1,11 +1,12 @@
 ---
 layout: post
-title: oracle stream pool size
+title: "oracle stream pool size"
 date: 2024-07-17 18:09 +0800
 categories: [oracle]
 tags: [oracle]
 cnblogid: 18308044
 ---
+
 See: [STREAMS_POOL_SIZE](https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/STREAMS_POOL_SIZE.html)
 
 ---

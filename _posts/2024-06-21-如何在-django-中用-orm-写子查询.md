@@ -1,11 +1,12 @@
 ---
 layout: post
-title: 如何在 django 中用 orm 写子查询
+title: "如何在 django 中用 orm 写子查询"
 date: 2024-06-21 08:37 +0800
 categories: [python, django]
 tags: [django, orm, python]
 cnblogid: 18259854
 ---
+
 如果想实现下面的 SQL：
 
 ```sql

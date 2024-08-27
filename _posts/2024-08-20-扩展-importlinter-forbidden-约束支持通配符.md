@@ -1,11 +1,12 @@
 ---
 layout: post
-title: 扩展 importlinter forbidden 约束支持通配符
+title: "扩展 importlinter forbidden 约束支持通配符"
 date: 2024-08-20 11:11 +0800
 categories: []
 tags: [python]
 cnblogid: 18369095
 ---
+
 #### 1. 前言
 `importlinter` 默认的 `forbidden` 约束并不支持通配符，本文通过自定义合约一直 `forbidden_modules` 以支持通配符的方式配置。
 

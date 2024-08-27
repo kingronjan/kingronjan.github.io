@@ -1,11 +1,12 @@
 ---
 layout: post
-title: django | 为 model 定义逻辑外键
+title: "django | 为 model 定义逻辑外键"
 date: 2024-06-25 22:36 +0800
 categories: [python, django]
 tags: [django, orm, python]
 cnblogid: 18267977
 ---
+
 ### 问题
 想要在 `orm` 中定义外键，便于关联查询，但不想在数据库中生成实际的外键约束。
 

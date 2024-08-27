@@ -1,11 +1,12 @@
 ---
 layout: post
-title: 减轻内存负担，在 pymysql 中使用 SSCursor 查询结果集较大的 SQL
+title: "减轻内存负担，在 pymysql 中使用 SSCursor 查询结果集较大的 SQL"
 date: 2020-10-25 21:04 +0800
 categories: [python]
 tags: []
 cnblogid: 13875223
 ---
+
 ### 前言
 
 默认情况下，使用 pymysql 查询数据使用的游标类是 Cursor，比如：

@@ -1,11 +1,12 @@
 ---
 layout: post
-title: Python 中更安全的 eval
+title: "Python 中更安全的 eval"
 date: 2021-12-09 15:24 +0800
 categories: [python]
 tags: []
 cnblogid: 15667558
 ---
+
 ### 问题
 
 想要将一段列表形式的字符串转为 `list`，但是担心这个动态的字符串可能是恶意的代码？使用 `eval` 将带来安全隐患。比如：

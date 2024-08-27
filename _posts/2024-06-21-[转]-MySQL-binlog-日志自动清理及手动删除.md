@@ -1,11 +1,12 @@
 ---
 layout: post
-title: \[转\] MySQL binlog 日志自动清理及手动删除
+title: "[转] MySQL binlog 日志自动清理及手动删除"
 date: 2024-06-21 21:41 +0800
 categories: [mysql]
-tags: [MySQL]
+tags: [mysql]
 cnblogid: 18261558
 ---
+
 ### 参考
 转载自 [mysql binlog日志自动清理及手动删除 - 景岳 - 博客园](https://www.cnblogs.com/xxoome/p/9802684.html)
 

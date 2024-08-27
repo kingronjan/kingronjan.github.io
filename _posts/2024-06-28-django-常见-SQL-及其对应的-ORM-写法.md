@@ -1,11 +1,12 @@
 ---
 layout: post
-title: django | 常见 SQL 及其对应的 ORM 写法
+title: "django | 常见 SQL 及其对应的 ORM 写法"
 date: 2024-06-28 23:35 +0800
 categories: [python, django]
-tags: [django, MySQL, orm, python]
+tags: [django, mysql, orm, python]
 cnblogid: 18274515
 ---
+
 #### 1. 子查询用 count 作为返回值
 期望的 SQL 类似于:
 ```sql

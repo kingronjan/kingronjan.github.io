@@ -1,11 +1,12 @@
 ---
 layout: post
-title: kafka 如何消费 topic 最新的 n 条数据
+title: "kafka 如何消费 topic 最新的 n 条数据"
 date: 2024-06-04 17:55 +0800
 categories: [kafka]
 tags: [kafka]
 cnblogid: 18231420
 ---
+
 ### 使用 kafka 命令行
 
 获取最大的 offset 值和对应的分区信息:

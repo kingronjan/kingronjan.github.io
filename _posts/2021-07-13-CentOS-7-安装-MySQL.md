@@ -1,11 +1,12 @@
 ---
 layout: post
-title: CentOS 7 安装 MySQL
+title: "CentOS 7 安装 MySQL"
 date: 2021-07-13 17:26 +0800
 categories: [linux]
-tags: [Linux, MySQL]
+tags: [linux, mysql]
 cnblogid: 15007512
 ---
+
 
 
 1. 下载安装包

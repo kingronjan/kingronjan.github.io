@@ -1,11 +1,12 @@
 ---
 layout: post
-title: 离线安装 vscode-server
+title: "离线安装 vscode-server"
 date: 2024-07-08 22:15 +0800
 categories: [code-server]
 tags: [vscode, code-server, ide]
 cnblogid: 18290792
 ---
+
 1. 获取当前版本 vscode 的 commit_id：Help - > About -> Commit
 
 2. 根据 commit_id 下载对应版本的 vscode-server：

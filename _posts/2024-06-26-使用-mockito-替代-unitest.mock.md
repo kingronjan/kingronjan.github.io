@@ -1,11 +1,12 @@
 ---
 layout: post
-title: 使用 mockito 替代 unitest.mock
+title: "使用 mockito 替代 unitest.mock"
 date: 2024-06-26 09:50 +0800
 categories: [python, pytest]
 tags: [pytest, mock]
 cnblogid: 18268291
 ---
+
 ### 介绍
 `mockito` 是一个 `pytest` 插件，相比于 `unitest.mock`，具有如下特点：
 - 所有对象都自动为 `autospec`，无需担心模拟对象被错误的调用而不被发现

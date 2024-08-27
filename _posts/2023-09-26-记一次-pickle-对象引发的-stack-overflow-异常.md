@@ -1,11 +1,12 @@
 ---
 layout: post
-title: 记一次 pickle 对象引发的 stack overflow 异常
+title: "记一次 pickle 对象引发的 stack overflow 异常"
 date: 2023-09-26 09:46 +0800
 categories: [python]
 tags: [python]
 cnblogid: 17729426
 ---
+
 ### 问题
 
 工程中有一个类是代理类，大概实现如下：

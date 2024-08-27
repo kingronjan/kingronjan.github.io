@@ -1,11 +1,12 @@
 ---
 layout: post
-title: Python __new__ 方法解释与使用
+title: "Python __new__ 方法解释与使用"
 date: 2020-09-24 23:57 +0800
 categories: [python]
 tags: []
 cnblogid: 13727461
 ---
+
 # 解释
 
 我们通常把 `__init__` 称为构造方法，这是从其他语言借鉴过来的术语。

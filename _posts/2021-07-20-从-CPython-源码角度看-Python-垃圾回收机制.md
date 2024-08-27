@@ -1,11 +1,12 @@
 ---
 layout: post
-title: 从 CPython 源码角度看 Python 垃圾回收机制
+title: "从 CPython 源码角度看 Python 垃圾回收机制"
 date: 2021-07-20 15:09 +0800
 categories: [python]
 tags: [python]
 cnblogid: 15035055
 ---
+
 #### 环状双向链表 refchain
 
 在 Python 程序中创建的任何对象都会被放到 refchain 链表中，当创建一个 Python 对象时，内部实际上创建了一些基本的数据：

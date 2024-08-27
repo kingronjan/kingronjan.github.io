@@ -1,11 +1,12 @@
 ---
 layout: post
-title: python logger 使用技巧集锦
+title: "python logger 使用技巧集锦"
 date: 2024-07-08 16:40 +0800
 categories: [python]
 tags: [python, 日志, logging]
 cnblogid: 18290266
 ---
+
 #### 1. 简单使用
 ```python
 import logging

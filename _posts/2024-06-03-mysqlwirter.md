@@ -1,11 +1,12 @@
 ---
 layout: post
-title: mysqlwirter
+title: "mysqlwirter"
 date: 2024-06-03 15:50 +0800
 categories: [数据同步, hive2pg/mysql]
 tags: [datax, 数据同步]
 cnblogid: 18229047
 ---
+
 # DataX MysqlWriter
 
 
