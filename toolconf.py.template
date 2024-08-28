@@ -1,0 +1,25 @@
+"""
+Settings for tools.
+"""
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent.absolute()
+
+CNBLOG_COOKIES = {}
+
+CNBLOG_HEADERS = {}
+
+CNBLOG_POST_TEMPLATE = f"""---
+layout: post
+title: %(title)s
+date: %(date)s +0800
+categories: [%(category)s]
+tags: [%(tags)s]
+cnblogid: %(cnblogid)s
+---
+
+%(content)s
+"""
+
+CNBLOG_POST_DIR = BASE_DIR / '_posts/cnblog'
+CNBLOG_HOME_URL = 'https://www.cnblogs.com/kingron'
