@@ -27,3 +27,4 @@ assets/js/dist
 
 # Tools
 toolconf.py
+*.pyc
