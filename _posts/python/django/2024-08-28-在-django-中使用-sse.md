@@ -2,7 +2,7 @@
 layout: post
 title: "在 django 中使用 sse"
 date: 2024-08-28 18:18 +0800
-categories: [django]
+categories: [python, django]
 tags: [django]
 ---
 
