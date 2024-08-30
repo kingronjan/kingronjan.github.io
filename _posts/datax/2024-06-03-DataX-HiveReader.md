@@ -2,7 +2,7 @@
 layout: post
 title: "DataX HiveReader"
 date: 2024-06-03 13:54 +0800
-categories: [数据同步, hive2pg/mysql]
+categories: [datax]
 tags: [datax, 数据同步]
 cnblogid: 18228748
 ---

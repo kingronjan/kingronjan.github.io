@@ -213,6 +213,8 @@ exclude:
   - LICENSE
   - "*.config.js"
   - package*.json
+  - "*.py"
+  - "*.py.template"
 
 jekyll-archives:
   enabled: [categories, tags]

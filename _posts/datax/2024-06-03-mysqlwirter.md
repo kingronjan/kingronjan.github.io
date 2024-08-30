@@ -2,7 +2,7 @@
 layout: post
 title: "mysqlwirter"
 date: 2024-06-03 15:50 +0800
-categories: [数据同步, hive2pg/mysql]
+categories: [datax]
 tags: [datax, 数据同步]
 cnblogid: 18229047
 ---
@@ -125,8 +125,8 @@ MysqlWriter 通过 DataX 框架获取 Reader 生成的协议数据，根据你�
 
 
  	* 必选：是 <br />
-
-	* 默认值：无 <br />
+ 	
+ 	* 默认值：无 <br />
 
 * **username**
 
@@ -159,9 +159,9 @@ MysqlWriter 通过 DataX 框架获取 Reader 生成的协议数据，根据你�
 	* 描述：目的表需要写入数据的字段,字段之间用英文逗号分隔。例如: "column": ["id","name","age"]。如果要依次写入全部列，使用`*`表示, 例如: `"column": ["*"]`。
 
 			**column配置项必须指定，不能留空！**
-
-               注意：1、我们强烈不推荐你这样配置，因为当你目的表字段个数、类型等有改动时，你的任务可能运行不正确或者失败
-                    2、 column 不能配置任何常量值
+	
+    	       注意：1、我们强烈不推荐你这样配置，因为当你目的表字段个数、类型等有改动时，你的任务可能运行不正确或者失败
+    	            2、 column 不能配置任何常量值
 
 	* 必选：是 <br />
 
@@ -236,27 +236,27 @@ MysqlWriter 通过 DataX 框架获取 Reader 生成的协议数据，根据你�
 建表语句：
 
 	CREATE TABLE `datax_mysqlwriter_perf_00` (
-  	`biz_order_id` bigint(20) NOT NULL AUTO_INCREMENT  COMMENT 'id',
-  	`key_value` varchar(4000) NOT NULL COMMENT 'Key-value的内容',
-  	`gmt_create` datetime NOT NULL COMMENT '创建时间',
-  	`gmt_modified` datetime NOT NULL COMMENT '修改时间',
-  	`attribute_cc` int(11) DEFAULT NULL COMMENT '防止并发修改的标志',
-  	`value_type` int(11) NOT NULL DEFAULT '0' COMMENT '类型',
-  	`buyer_id` bigint(20) DEFAULT NULL COMMENT 'buyerid',
-  	`seller_id` bigint(20) DEFAULT NULL COMMENT 'seller_id',
-  	PRIMARY KEY (`biz_order_id`,`value_type`),
-  	KEY `idx_biz_vertical_gmtmodified` (`gmt_modified`)
+	`biz_order_id` bigint(20) NOT NULL AUTO_INCREMENT  COMMENT 'id',
+	`key_value` varchar(4000) NOT NULL COMMENT 'Key-value的内容',
+	`gmt_create` datetime NOT NULL COMMENT '创建时间',
+	`gmt_modified` datetime NOT NULL COMMENT '修改时间',
+	`attribute_cc` int(11) DEFAULT NULL COMMENT '防止并发修改的标志',
+	`value_type` int(11) NOT NULL DEFAULT '0' COMMENT '类型',
+	`buyer_id` bigint(20) DEFAULT NULL COMMENT 'buyerid',
+	`seller_id` bigint(20) DEFAULT NULL COMMENT 'seller_id',
+	PRIMARY KEY (`biz_order_id`,`value_type`),
+	KEY `idx_biz_vertical_gmtmodified` (`gmt_modified`)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='datax perf test'
 
 
 单行记录类似于：
 
    	   key_value: ;orderIds:20148888888,2014888888813800;
-  	  gmt_create: 2011-09-24 11:07:20
-	gmt_modified: 2011-10-24 17:56:34
-	attribute_cc: 1
-  	  value_type: 3
-    	buyer_id: 8888888
+   	  gmt_create: 2011-09-24 11:07:20
+   	gmt_modified: 2011-10-24 17:56:34
+   	attribute_cc: 1
+   	  value_type: 3
+   		buyer_id: 8888888
    	   seller_id: 1
 
 #### 4.1.2 机器参数
