@@ -2,7 +2,7 @@
 layout: post
 title: "mysqlwirter"
 date: 2024-06-03 15:50 +0800
-categories: [datax]
+categories: [java, datax]
 tags: [datax, 数据同步]
 cnblogid: 18229047
 ---
@@ -159,7 +159,7 @@ MysqlWriter 通过 DataX 框架获取 Reader 生成的协议数据，根据你�
 	* 描述：目的表需要写入数据的字段,字段之间用英文逗号分隔。例如: "column": ["id","name","age"]。如果要依次写入全部列，使用`*`表示, 例如: `"column": ["*"]`。
 
 			**column配置项必须指定，不能留空！**
-	
+		
     	       注意：1、我们强烈不推荐你这样配置，因为当你目的表字段个数、类型等有改动时，你的任务可能运行不正确或者失败
     	            2、 column 不能配置任何常量值
 

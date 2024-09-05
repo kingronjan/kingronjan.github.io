@@ -2,7 +2,7 @@
 layout: post
 title: "DataX HiveReader"
 date: 2024-06-03 13:54 +0800
-categories: [datax]
+categories: [java, datax]
 tags: [datax, 数据同步]
 cnblogid: 18228748
 ---
