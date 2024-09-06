@@ -9,9 +9,98 @@ description: "dbezium 数据抽取源码学习笔记"
 
 
 
-#### CDC数据解析
+### 启动分析
 
-##### [OpenLogReplicator](https://www.bersler.com/openlogreplicator/)
+```java
+// io.debezium.connector.oracle.OracleConnectorTask#start
+ChangeEventSourceCoordinator<OraclePartition, OracleOffsetContext> coordinator = new ChangeEventSourceCoordinator<>(
+  previousOffsets,
+  errorHandler,
+  OracleConnector.class,
+  connectorConfig,
+  new OracleChangeEventSourceFactory(connectorConfig, connectionFactory, errorHandler, dispatcher, clock, schema, jdbcConfig, taskContext,
+                                     streamingMetrics, snapshotterService),
+  new OracleChangeEventSourceMetricsFactory(streamingMetrics),
+  dispatcher,
+  schema, signalProcessor,
+  notificationService, snapshotterService);
+
+// 最终调用该方法启动
+coordinator.start(taskContext, this.queue, metadataProvider);
+
+return coordinator;
+```
+
+
+
+`coordinator.start` 方法：
+
+```java
+previousLogContext.set(taskContext.configureLoggingContext("snapshot"));
+snapshotMetrics.register();
+streamingMetrics.register();
+LOGGER.info("Metrics registered");
+
+context = new ChangeEventSourceContextImpl();
+LOGGER.info("Context created");
+
+snapshotSource = changeEventSourceFactory.getSnapshotChangeEventSource(snapshotMetrics, notificationService);
+executeChangeEventSources(taskContext, snapshotSource, previousOffsets, previousLogContext, context);
+```
+
+
+
+最终执行了：`executeChangeEventSources`
+
+```java
+// io.debezium.pipeline.ChangeEventSourceCoordinator#executeChangeEventSources
+protected void executeChangeEventSources(CdcSourceTaskContext taskContext, SnapshotChangeEventSource<P, O> snapshotSource, Offsets<P, O> previousOffsets,
+                                         AtomicReference<LoggingContext.PreviousContext> previousLogContext, ChangeEventSourceContext context)
+  throws InterruptedException {
+  final P partition = previousOffsets.getTheOnlyPartition();
+  final O previousOffset = previousOffsets.getTheOnlyOffset();
+
+  previousLogContext.set(taskContext.configureLoggingContext("snapshot", partition));
+  
+  // 做了一次快照并拿到了 offset
+  SnapshotResult<O> snapshotResult = doSnapshot(snapshotSource, context, partition, previousOffset);
+
+  getSignalProcessor(previousOffsets).ifPresent(s -> s.setContext(snapshotResult.getOffset()));
+
+  LOGGER.debug("Snapshot result {}", snapshotResult);
+
+  if (running && snapshotResult.isCompletedOrSkipped()) {
+    if (snapshotResult.isCompleted()) {
+      delayStreamingIfNeeded(context);
+    }
+    previousLogContext.set(taskContext.configureLoggingContext("streaming", partition));
+    // 最终调用
+    streamEvents(context, partition, snapshotResult.getOffset());
+  }
+}
+
+protected void streamEvents(ChangeEventSourceContext context, P partition, O offsetContext) throws InterruptedException {
+  initStreamEvents(partition, offsetContext);
+  getSignalProcessor(previousOffsets).ifPresent(signalProcessor -> registerSignalActionsAndStartProcessor(signalProcessor,
+                                                                                                          eventDispatcher, this, connectorConfig));
+
+  if (snapshotterService != null && !snapshotterService.getSnapshotter().shouldStream()) {
+    LOGGER.info("Streaming is disabled for snapshot mode {}", snapshotterService.getSnapshotter().name());
+    return;
+  }
+
+  LOGGER.info("Starting streaming");
+  // 调用了 LogMinerStreamingChangeEventSource#execute 方法
+  streamingSource.execute(context, partition, offsetContext);
+  LOGGER.info("Finished streaming");
+}
+```
+
+
+
+### CDC数据解析
+
+#### [OpenLogReplicator](https://www.bersler.com/openlogreplicator/)
 
 ```java
 // debezium-connector-oracle/src/main/java/io/debezium/connector/oracle/olr/OpenLogReplicatorStreamingChangeEventSource.java
@@ -45,7 +134,7 @@ description: "dbezium 数据抽取源码学习笔记"
 
 
 
-#### Logminner
+### Logminner
 
 启动
 
@@ -130,7 +219,36 @@ description: "dbezium 数据抽取源码学习笔记"
 
 
 
-#### 参考文档
+### StartScn
+
+```java
+// in io.debezium.connector.oracle.logminer.LogMinerStreamingChangeEventSource#execute
+startScn = connectorConfig.getAdapter().getOffsetScn(this.effectiveOffset);
+
+// io.debezium.connector.oracle.logminer.LogMinerAdapter#getOffsetScn
+@Override
+public Scn getOffsetScn(OracleOffsetContext offsetContext) {
+  return offsetContext.getScn();
+}
+
+// 所以又回到了 this.effectiveOffset
+// io.debezium.connector.oracle.logminer.LogMinerStreamingChangeEventSource#execute
+@Override
+public void execute(ChangeEventSourceContext context, OraclePartition partition, OracleOffsetContext offsetContext) {
+    prepareConnection(false);
+    this.effectiveOffset = offsetContext;
+    startScn = connectorConfig.getAdapter().getOffsetScn(this.effectiveOffset);
+}
+
+// io.debezium.connector.oracle.OracleOffsetContext#getScn
+public Scn getScn() {
+  return sourceInfo.getScn();
+}
+```
+
+
+
+### 参考文档
 
 1. [Debezium 特性深入介绍 - 亚马逊AWS官方博客](https://aws.amazon.com/cn/blogs/china/debezium-deep-dive/)：讲到了 dbz 的快照机制，单机和分布式的工作模式，些微提及了水位线算法
 2. [Flink oracle cdc - Oracle Logminer CDC性能问题_flink oracle cdc-CSDN博客](https://blog.csdn.net/qiuqiufangfang1314/article/details/129095438)：默认的 logminner 存在性能问题，每秒处理数据不超过 1w，这篇文章讲了通过异步转移日志到不影响业务的 Oracle 实例，然后并发解析 logminner 的方法已提升性能

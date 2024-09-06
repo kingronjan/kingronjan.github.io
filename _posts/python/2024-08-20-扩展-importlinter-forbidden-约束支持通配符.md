@@ -7,12 +7,12 @@ tags: [python]
 cnblogid: 18369095
 ---
 
-#### 1. 前言
+### 1. 前言
 `importlinter` 默认的 `forbidden` 约束并不支持通配符，本文通过自定义合约一直 `forbidden_modules` 以支持通配符的方式配置。
 
 
 
-#### 2. 实现
+### 2. 实现
 在项目根目录中加入 `importlinterc.py` 文件：
 ```python
 from importlinter.application.contract_utils import AlertLevel
@@ -59,7 +59,7 @@ class FnMatchForbiddenContract(ForbiddenContract):
 
 
 
-#### 3. 配置
+### 3. 配置
 `pyproject.toml` 文件中注册：
 ```toml
 [tool.importlinter]
@@ -81,6 +81,6 @@ forbidden_modules = ['prettymd.service.*']
 
 
 
-#### 4. 参考
+### 4. 参考
 1. [Custom contract types — Import Linter 2.0 documentation](https://import-linter.readthedocs.io/en/v2.0/custom_contract_types.html#step-one-implementing-a-contract-class)
 2. to_pattern 匹配的示例可参考：[Options used by multiple contracts](https://import-linter.readthedocs.io/en/v2.0/contract_types.html#options-used-by-multiple-contracts)
