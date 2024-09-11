@@ -255,7 +255,8 @@ def check_vertical_line(args):
     if results:
         print('Vertical line found in links', file=sys.stderr)
         for file, links in results:
-            print(f'{file=}, {links=}')
+            print(f'{file}: links={links}')
+        raise SyntaxError('Vertical line exists in links')
 
 
 def main():
