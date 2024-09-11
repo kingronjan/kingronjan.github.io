@@ -1,0 +1,10 @@
+repos:
+- repo: local
+  hooks:
+    - id: clean-assets
+      name: clean-asssts
+      language: python
+      entry: python tool.py assets -c
+      files: '\d\.\d+$'
+      always_run: true
+      additional_dependencies: ['requests', 'prettymd']

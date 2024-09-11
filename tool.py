@@ -8,7 +8,6 @@ import time
 from pathlib import Path
 
 import requests
-from lxml import etree
 from prettymd import format
 
 try:
@@ -30,7 +29,14 @@ def main():
     parser.add_argument('-d --dir-path', dest='dir_path', default='_posts', help='which dir for place the new post')
     parser.add_argument('-f --file', dest='file', default=None,
                         help="if specified, will read the file's content as post content")
+    
+    subparser = parser.add_subparsers()
+    asset_parser = subparser.add_parser('assets')
+    asset_parser.add_argument('-c --clean', dest='clean', help='clean unused assets files.', action='store_true')
+
     args = parser.parse_args(sys.argv[1:])
+    if args.clean:
+        return remove_unused_assets()
 
     title = args.title
     if len(title) > 1:
@@ -61,6 +67,7 @@ def main():
     base_dir = Path(__file__).parent.absolute()
     filepath = base_dir / args.dir_path / filename
 
+    # XXX: suport template/config file for each folder.
     with open(filepath, 'w', encoding='utf8') as f:
         f.write('---\n')
         f.write('layout: post\n')
@@ -113,6 +120,8 @@ class CnBlogOperator(object):
         return requests.get(url, **kwargs)
 
     def parse(self, url=None):
+        from lxml import etree
+
         if url is not None:
             response = self.get(url)
         else:
@@ -192,5 +201,61 @@ class CnBlogOperator(object):
         print(f'File {filename} saved')
 
 
+def remove_unused_assets():
+    # 加载文件并拼接为字符串
+    counter = {}
+
+    for dirpath, _, filenames in os.walk(settings.BASE_DIR / 'assets'):
+        if dirpath.endswith('favicons'):
+            continue
+
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename)
+            filepath = filepath.split('assets', maxsplit=1)[-1]
+            filepath = filepath.replace('\\', '/')
+            counter[filepath] = 0
+
+    print('searching files usage: \n', '\n'.join(counter))
+
+    find_usages('_posts', counter)
+    find_usages('_tabs', counter)
+    find_usages('_config.yml', counter)
+
+    print('usage counts:', '\n'.join(f'{path=}, {count=}' for path, count in counter.items()))
+
+    for path, count in counter.items():
+        if count:
+            continue
+        
+        path = settings.BASE_DIR / 'assets' / path.strip('/')
+        print('removing unused file: ', path)
+        os.remove(path)
+
+
+def find_usages(dirname, counter):
+    def count(filepath):
+        with open(filepath, 'r', encoding='utf8') as f:
+            content = f.read()
+            for path in counter:
+                counter[path] += content.count(path)
+
+    dirpath = settings.BASE_DIR / dirname
+    if not dirpath.exists():
+        raise FileNotFoundError(f'file {dirname} not exists in {settings.BASE_DIR}')
+
+    print('finding usage in', dirpath)
+
+    if dirpath.is_file():
+        return count(dirpath)
+
+    for dirpath, _, filenames in os.walk(dirpath):
+        for filename in filenames:
+            if not filename.endswith('.md'):
+                continue
+
+            filepath = os.path.join(dirpath, filename)
+            count(filepath)
+
+
 if __name__ == '__main__':
-    main()
+    remove_unused_assets()
