@@ -7,7 +7,6 @@ import sys
 import time
 from pathlib import Path
 
-import requests
 from prettymd import format
 
 try:
@@ -21,68 +20,6 @@ def get_filename(title):
     title = title.replace('\\', '')
     title = re.sub(r'\s+', '-', title)
     return title
-
-
-def main():
-    parser = argparse.ArgumentParser('post-tools')
-    parser.add_argument('title', nargs='*', help='title for post')
-    parser.add_argument('-d --dir-path', dest='dir_path', default='_posts', help='which dir for place the new post')
-    parser.add_argument('-f --file', dest='file', default=None,
-                        help="if specified, will read the file's content as post content")
-    
-    subparser = parser.add_subparsers()
-    asset_parser = subparser.add_parser('assets')
-    asset_parser.add_argument('-c --clean', dest='clean', help='clean unused assets files.', action='store_true')
-
-    args = parser.parse_args(sys.argv[1:])
-    if args.clean:
-        return remove_unused_assets()
-
-    title = args.title
-    if len(title) > 1:
-        raise ValueError('support one title only')
-
-    if not title:
-        if not args.file:
-            raise ValueError('no file and no title specified')
-
-        title = os.path.split(args.file)[-1]
-        title, filetype = title.rsplit('.', maxsplit=1)
-
-    else:
-        title = title[0]
-        filetype = 'md'
-
-    categories = args.dir_path.split('_posts')[-1]
-    categories = categories.strip(os.sep)
-    categories = categories.split(os.sep)
-    categories = ', '.join(categories)
-
-    tags = categories.lower()
-
-    date = time.strftime('%Y-%m-%d %H:%M %z')
-    filename = get_filename(title)
-    filename = date.split()[0] + '-' + filename + '.' + filetype
-
-    base_dir = Path(__file__).parent.absolute()
-    filepath = base_dir / args.dir_path / filename
-
-    # XXX: suport template/config file for each folder.
-    with open(filepath, 'w', encoding='utf8') as f:
-        f.write('---\n')
-        f.write('layout: post\n')
-        f.write(f'title: "{title}"\n')
-        f.write(f'date: {date}\n')
-        f.write(f'categories: [{categories}]\n')
-        f.write(f'tags: [{tags}]\n')
-        f.write('---\n\n')
-
-        if args.file:
-            with open(args.file, 'r', encoding='utf8') as rf:
-                content = format(rf.read(), style='code')
-                f.write(content)
-
-    print(f'post created at: {filepath}')
 
 
 class CnBlogOperator(object):
@@ -115,6 +52,8 @@ class CnBlogOperator(object):
         return post_id in self.exists_posts
 
     def get(self, url, **kwargs):
+        import requests
+
         kwargs.setdefault('cookies', self.cookies)
         kwargs.setdefault('headers', self.headers)
         return requests.get(url, **kwargs)
@@ -201,7 +140,10 @@ class CnBlogOperator(object):
         print(f'File {filename} saved')
 
 
-def remove_unused_assets():
+def remove_unused_assets(args):
+    if not args.clean:
+        return print('skip clean without -c specified.')
+
     # 加载文件并拼接为字符串
     counter = {}
 
@@ -217,9 +159,9 @@ def remove_unused_assets():
 
     print('searching files usage: \n', '\n'.join(counter))
 
-    find_usages('_posts', counter)
-    find_usages('_tabs', counter)
-    find_usages('_config.yml', counter)
+    for filepath, content in read_posts():
+        for path in counter:
+            counter[path] += content.count(path)
 
     print('usage counts:', '\n'.join(f'{path=}, {count=}' for path, count in counter.items()))
 
@@ -232,30 +174,116 @@ def remove_unused_assets():
         os.remove(path)
 
 
-def find_usages(dirname, counter):
-    def count(filepath):
-        with open(filepath, 'r', encoding='utf8') as f:
-            content = f.read()
-            for path in counter:
-                counter[path] += content.count(path)
+def read_posts(config=True):
 
-    dirpath = settings.BASE_DIR / dirname
-    if not dirpath.exists():
-        raise FileNotFoundError(f'file {dirname} not exists in {settings.BASE_DIR}')
+    def read_dir(name):
+        dirpath = settings.BASE_DIR / name
+        for dirpath, _, filenames in os.walk(dirpath):
+            for filename in filenames:
+                if not filename.endswith('.md'):
+                    continue
+                filepath = os.path.join(dirpath, filename)
+                with open(filepath, 'r', encoding='utf8') as f:
+                    yield filepath, f.read()
 
-    print('finding usage in', dirpath)
+    yield from read_dir('_posts')
+    yield from read_dir('_tabs')
 
-    if dirpath.is_file():
-        return count(dirpath)
+    if config:    
+        configfile = settings.BASE_DIR / '_config.yml'
+        with open(configfile, 'r', encoding='utf8') as f:
+            yield configfile, f.read()
 
-    for dirpath, _, filenames in os.walk(dirpath):
-        for filename in filenames:
-            if not filename.endswith('.md'):
-                continue
 
-            filepath = os.path.join(dirpath, filename)
-            count(filepath)
+def create_post(args):
+    title = args.title
+    if len(title) > 1:
+        raise ValueError('support one title only')
+
+    if not title:
+        if not args.file:
+            raise ValueError('no file and no title specified')
+
+        title = os.path.split(args.file)[-1]
+        title, filetype = title.rsplit('.', maxsplit=1)
+
+    else:
+        title = title[0]
+        filetype = 'md'
+
+    categories = args.dir_path.split('_posts')[-1]
+    categories = categories.strip(os.sep)
+    categories = categories.split(os.sep)
+    categories = ', '.join(categories)
+
+    tags = categories.lower()
+
+    date = time.strftime('%Y-%m-%d %H:%M %z')
+    filename = get_filename(title)
+    filename = date.split()[0] + '-' + filename + '.' + filetype
+
+    base_dir = Path(__file__).parent.absolute()
+    filepath = base_dir / args.dir_path / filename
+
+    # XXX: suport template/config file for each folder.
+    with open(filepath, 'w', encoding='utf8') as f:
+        f.write('---\n')
+        f.write('layout: post\n')
+        f.write(f'title: "{title}"\n')
+        f.write(f'date: {date}\n')
+        f.write(f'categories: [{categories}]\n')
+        f.write(f'tags: [{tags}]\n')
+        f.write('---\n\n')
+
+        if args.file:
+            with open(args.file, 'r', encoding='utf8') as rf:
+                content = format(rf.read(), style='code')
+                f.write(content)
+
+    print(f'post created at: {filepath}')
+
+
+def check_vertical_line(args):
+    if not args.veritical_line:
+        return print('skip check without -v specified')
+
+    pattern = re.compile(r'\[.*?\|.*?\]\(.+?\)')
+    results = []
+
+    for filename, content in read_posts():
+        links = pattern.findall(content)
+        if links:
+            results.append((filename, links))
+
+    if results:
+        print('Vertical line found in links', file=sys.stderr)
+        for file, links in results:
+            print(f'{file=}, {links=}')
+
+
+def main():
+    parser = argparse.ArgumentParser('post-tools')
+    parser.add_argument('title', nargs='*', help='title for post')
+    parser.add_argument('-d --dir-path', dest='dir_path', default='_posts', help='which dir for place the new post')
+    parser.add_argument('-f --file', dest='file', default=None,
+                        help="if specified, will read the file's content as post content")
+    
+    subparser = parser.add_subparsers(dest='subcmd')
+    asset_parser = subparser.add_parser('assets')
+    asset_parser.add_argument('-c --clean', dest='clean', help='clean unused assets files.', action='store_true')
+    asset_parser.set_defaults(func=remove_unused_assets)
+
+    check_parser = subparser.add_parser('check')
+    check_parser.add_argument('-v --vertical-line', dest='veritical_line', action='store_true', help='check vertical line in links, aviod render error')
+    check_parser.set_defaults(func=check_vertical_line)
+
+    args = parser.parse_args(sys.argv[1:])
+
+    if args.subcmd:
+        args.func(args)
+    else:
+        create_post(args)
 
 
 if __name__ == '__main__':
-    remove_unused_assets()
+    main()
