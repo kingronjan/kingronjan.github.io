@@ -12,7 +12,7 @@ excalidrawjson: ../../../assets/excalidraw/dbz-oracle-flow.excalidraw
 
 ### 代码流程
 
-![dbz-oracle-logminer-flow](../../../assets/images/dbz-oracle-logminer-flow.png)
+![dbz-oracle-logminer-flow](/assets/images/dbz-oracle-logminer-flow.png)
 
 源文件：[dbz-oracle-flow.excalidraw](/assets/excalidraw/dbz-oracle-flow.excalidraw)
 
