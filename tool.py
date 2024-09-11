@@ -197,8 +197,6 @@ def read_posts(config=True):
 
 def create_post(args):
     title = args.title
-    if len(title) > 1:
-        raise ValueError('support one title only')
 
     if not title:
         if not args.file:
@@ -208,7 +206,6 @@ def create_post(args):
         title, filetype = title.rsplit('.', maxsplit=1)
 
     else:
-        title = title[0]
         filetype = 'md'
 
     categories = args.dir_path.split('_posts')[-1]
@@ -277,12 +274,19 @@ def main():
     check_parser.add_argument('-v --vertical-line', dest='veritical_line', action='store_true', help='check vertical line in links, aviod render error')
     check_parser.set_defaults(func=check_vertical_line)
 
+    post_parser = subparser.add_parser('post')
+    post_parser.add_argument('-t --title', dest='title', help='title for post')
+    post_parser.add_argument('-d --dir-path', dest='dir_path', default='_posts', help='which dir for place the new post')
+    post_parser.add_argument('-f --file', dest='file', default=None,
+                            help="if specified, will read the file's content as post content")
+    post_parser.set_defaults(func=create_post)
+
     args = parser.parse_args(sys.argv[1:])
 
     if args.subcmd:
         args.func(args)
     else:
-        create_post(args)
+        raise NotImplementedError('require subcommand.')
 
 
 if __name__ == '__main__':
