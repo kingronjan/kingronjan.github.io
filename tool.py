@@ -244,19 +244,22 @@ def check_vertical_line(args):
     if not args.veritical_line:
         return print('skip check without -v specified')
 
-    pattern = re.compile(r'\[.*?\|.*?\]\(.+?\)')
-    results = []
+    pattern = re.compile(r'\[.*?(?<!\\)\|.*?\]\(.+?\)')
 
     for filename, content in read_posts():
         links = pattern.findall(content)
-        if links:
-            results.append((filename, links))
+        if not links:
+            continue
 
-    if results:
-        print('Vertical line found in links', file=sys.stderr)
-        for file, links in results:
-            print(f'{file}: links={links}')
-        raise SyntaxError('Vertical line exists in links')
+        for link in links:
+            escaped_link = link.replace(r'\|', '|')
+            escaped_link = link.replace('|', r'\|')
+            content = content.replace(link, escaped_link)
+
+        with open(filename, 'w', encoding='utf8') as f:
+            f.write(content)
+        
+        print('Vertical line was escaped from ', filename)
 
 
 def main():
@@ -272,7 +275,7 @@ def main():
     asset_parser.set_defaults(func=remove_unused_assets)
 
     check_parser = subparser.add_parser('check')
-    check_parser.add_argument('-v --vertical-line', dest='veritical_line', action='store_true', help='check vertical line in links, aviod render error')
+    check_parser.add_argument('-v --vertical-line', dest='veritical_line', action='store_true', help='escape vertical line in links, aviod render error')
     check_parser.set_defaults(func=check_vertical_line)
 
     post_parser = subparser.add_parser('post')
