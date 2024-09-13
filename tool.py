@@ -148,7 +148,7 @@ def remove_unused_assets(args):
     counter = {}
 
     for dirpath, _, filenames in os.walk(settings.BASE_DIR / 'assets'):
-        if dirpath.endswith('favicons'):
+        if dirpath.endswith(('favicons', 'css')):
             continue
 
         for filename in filenames:

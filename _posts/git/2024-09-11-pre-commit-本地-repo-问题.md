@@ -32,7 +32,7 @@ description: "记录使用本地 repo 遇到的问题和解决方案"
         name: Check X
         entry: ./bin/check-x.sh
         language: script
-        files: \.x$  # 匹配任意文件
+        files: \.x$
     -   id: scss-lint
         name: scss-lint
         entry: scss-lint
@@ -67,3 +67,12 @@ repos:
 
 
 
+### 不传入更改文件
+
+pre-commit 默认会传入变更文件给 hooks，如果不希望传入文件，可以指定 [pass_filenames](https://pre-commit.com/#hooks-pass_filenames) 参数为 `false`，或者通过指定 `files: '\d\.\d+$'` 这种不常见的文件名匹配模式，以确保不会有文件会被传入
+
+
+
+---
+
+1. [pre-commit](https://pre-commit.com/)

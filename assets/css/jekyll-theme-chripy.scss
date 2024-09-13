@@ -1,0 +1,28 @@
+---
+---
+
+@import 'main
+{%- if jekyll.environment == 'production' -%}
+  .bundle
+{%- endif -%}
+';
+
+/* append your custom style below */
+
+h5 {
+    margin-top: 2.5rem;
+    font-weight: bold;
+}
+
+h5 a {
+    color: var(--text-color);
+}
+
+h5 span:first-child a:first-child::before {
+    content: "🍕";
+    margin-right: 4px;
+}
+
+h3+h5 {
+    margin-top: 0rem;
+}
