@@ -8,7 +8,7 @@ tags: [python, django, pre-commit]
 
 
 
-最近项目中老是遇到有的同事没有做了 ORM 表结构更改，但是没有生成相关的迁移文件，或者虽然生成了，但是存在冲突，没有解决就推到代码库了，导致项目部署时没有应用到最新的表结构，这种低级错误本来应该在代码提交时就可以发现，这个时候用 pre-commit 检查就很有必要了。
+最近项目中老是遇到有的同事做了 ORM 模型更改，但是没有生成相关的迁移文件，或者虽然生成了，但是存在冲突，没有解决就推到代码库了，导致项目部署时没有应用到最新的表结构，这种低级错误本来应该在代码提交时就可以发现，这个时候 pre-commit 就派上用场了，通过定制 pre-commit 钩子，在提交前检查是否存在模型更改但没有迁移，或者迁移存在冲突，如果有就中断提交，直到修复后才让提交成功。
 
 通过查阅 [django 官方文档](https://docs.djangoproject.com/zh-hans/5.1/ref/django-admin/#makemigrations)发现，`makrmigrations` 命令有两个参数很适合用来检查迁移文件未生成或存在冲突的情况：
 
@@ -20,7 +20,7 @@ tags: [python, django, pre-commit]
 > 考虑到可能存在冲突的迁移文件，需要手动介入处理，因此只做检查而不自动生成新的迁移文件最好不过
 {: .prompt-tip }
 
-下面是添加 pre-commit 配置：
+下面是添加的 [pre-commit](https://pre-commit.com/) 配置：
 
 ```yaml
 repos:
