@@ -2,8 +2,8 @@
 layout: post
 title: "CentOS 7 安装 MySQL"
 date: 2021-07-13 17:26 +0800
-categories: [linux]
-tags: [linux, mysql]
+categories: [database, mysql]
+tags: [database, mysql, centos]
 cnblogid: 15007512
 ---
 
