@@ -16,7 +16,7 @@ timezone:
 
 title: Wondering # the main title
 
-tagline: kingron's blog # it will display as the sub-title
+tagline: good good study, day day up # it will display as the sub-title
 
 description: >- # used by seo meta and the atom feed
   A minimal, responsive and feature-rich Jekyll theme for technical writing.
