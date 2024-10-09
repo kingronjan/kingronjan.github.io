@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "解决 supervisord 重启时没有停止运行中的 celery 进程"
+title: "supervisord 停止时没有停止运行中的 celery 进程"
 date: 2024-09-29 14:06 +0800
 categories: [python, celery]
 tags: [python, celery]
@@ -23,8 +23,9 @@ stopsignal=QUIT               ; signal used to kill process (default TERM)
 redirect_stderr=true          ; redirect proc stderr to stdout (default false)
 stdout_logfile=/home/kingron/app/myapp/log/celery-worker.log        ; stdout log path, NONE for none; default AUTO
 ```
+{: file='myapp/supervisord.conf' }
 
-通过检索发现 supervisor 提供了一个参数 `killasgroup`，默认为 `false`，如果设置为 `true`，那么在关闭进程时会作为进程组关闭，通过翻阅源码可知，具体操作就是在进程名前加上一个负号（`unix/linux` 系统），官方文档描述如下：
+通过检索发现 supervisor 提供了一个参数 `killasgroup`，默认为 `false`，如果设置为 `true`，那么在关闭进程时会作为进程组关闭，官方文档描述如下：
 
 > killasgroup
 >
@@ -38,11 +39,21 @@ stdout_logfile=/home/kingron/app/myapp/log/celery-worker.log        ; stdout log
 
 加上 `killasgroup=true` 的配置后，正在运行中的 celery 进程确实会被关闭，但也引来了另外一个问题：
 
-- 由于在 celery 任务中还有通过 shell 发起 `nohup` 的进程调用，如果加上该配置，那么这些通过 `nohup` 调用的进程也会被 kill。
+- 由于在 celery 任务中还有通过 shell 发起 `nohup` 的进程调用，如果加上该配置，那么这些通过 `nohup` 调用的进程也会被 kill
 
-所以尽管进程是通过 `nohup` 启动，但它仍然是 celery worker 进程的子进程（虽然我们通过 `ps` 看到的父进程号已经不是 celery worker 进程对应的进程号了）。这其实有点反直觉，查询相关文档后才知道，原来 shell 会在登出前清理并发送信号 `SIGNUP` 给自己可控制的进程，在使用的终端设备（键盘输入、屏幕输出等）也会被关闭，而 `nohup` 的作用只是确保 `SIGNUP` 信号会被忽略，且屏幕等终端设备不会被使用。这样通过 `nohup` 调用的进程才可以在登出 shell 后继续运行。
+明明是 `nohup` 调用，怎么还会被 `killasgroup` 影响呢？
 
-但是 `nohup` 并不会破坏进程的继承关系，所以当通过进程组关闭时，`nohup` 调用的进程也不会成为漏网之鱼。
+通过翻阅[ supervisord 源码](https://github.com/Supervisor/supervisor/blob/29eeb9dd55c55da2e83c5497d01f3a859998ecf9/supervisor/process.py#L434)发现，`killasgroup=true`，具体操作就是在进程名前加上一个负号（`unix/linux` 系统）：
+
+```python
+    pid = self.pid
+    if killasgroup:
+        # send to the whole process group instead
+        pid = -self.pid
+```
+{: file='supervisor/supervisor/process.py' }
+
+在 `kill` 命令中，符号加进程号指向的就是进程组，意味着要关闭这个进程以及该进程所生成的所有子孙进程。而 `nohup`  正如其名，只是让进程不会挂起，转在后台运行，并不会破坏进程的继承关系，所以当配置 `killasgroup=true` 时，`nohup` 调起的进程也未能幸免。
 
 那么如果想要保留 `nohup` 调用的进程，但是停止 celery worker 进程呢？
 
@@ -97,10 +108,11 @@ class Command(BaseCommand):
         with open(filepath, 'w', encoding='utf8') as f:
             f.write(' '.join(workers))
 ```
-{: file='/home/kingron/app/myapp/myapp/management/commands/celery.py' }
+{: file='myapp/myapp/management/commands/celery.py' }
 
 
 ---
 
 1. [python - Make supervisor stop Celery workers correctly - Stack Overflow](https://stackoverflow.com/questions/31800447/make-supervisor-stop-celery-workers-correctly "python - Make supervisor stop Celery workers correctly - Stack Overflow")
 2. [python - Process started with nohup is not detached from parent - Stack Overflow](https://stackoverflow.com/questions/42608290/process-started-with-nohup-is-not-detached-from-parent "python - Process started with nohup is not detached from parent - Stack Overflow")
+3. [The Linux kernel: Processes](https://aeb.win.tue.nl/linux/lk/lk-10.html#ss10.2 "The Linux kernel: Processes")
