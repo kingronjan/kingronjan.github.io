@@ -1,6 +1,6 @@
 ---
 # the default layout is 'page'
-icon: fas fa-calendar-week
+icon: fas fa-code
 order: 4
 ---
 
