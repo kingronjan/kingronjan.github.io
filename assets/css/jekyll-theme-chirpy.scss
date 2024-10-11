@@ -9,13 +9,21 @@
 
 /* append your custom style below */
 
+html[data-mode=light] {
+    --h5-link-color: rgb(230 141 0);
+}
+
+html:not([data-mode]), html[data-mode=dark] {
+    --h5-link-color: rgb(202 154 78);
+}
+
 h5 {
     margin-top: 2.5rem;
     font-weight: bold;
 }
 
 h5 a {
-    color: var(--text-color);
+    color: var(--h5-link-color);
 }
 
 h5 span:first-child a:first-child::before {

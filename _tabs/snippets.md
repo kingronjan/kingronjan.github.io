@@ -4,19 +4,11 @@ icon: fas fa-calendar-week
 order: 4
 ---
 
-<!-- 
-
-See: [用GitHub-Pages搭建博客及Jekyll主题设置-海边捡点贝壳](https://xienotes.net/2020/04/25/github-pages-and-jekyll.html) 
-Also: https://github.com/cotes2020/jekyll-theme-chirpy/blob/master/_layouts/category.html
-
--->
-
 {% include lang.html %}
 
+收集一些有用的代码片段
 
-在这里，记录和分享最近一周读到的技术类文章，python 为主。
-
-{% assign posts = site.posts | where: 'categories', 'weekly' %}
+{% assign posts = site.posts | where: 'tags', 'snippets' %}
 
 <div id="page-category">
   <ul class="content ps-0">

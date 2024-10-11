@@ -215,6 +215,8 @@ exclude:
   - package*.json
   - "*.py"
   - "*.py.template"
+  - bin
+  - node_modules
 
 jekyll-archives:
   enabled: [categories, tags]
