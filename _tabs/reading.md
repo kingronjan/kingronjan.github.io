@@ -1,6 +1,6 @@
 ---
 # the default layout is 'page'
-icon: fas fa-calendar-week
+icon: fas fa-bookmark
 order: 4
 ---
 
@@ -14,9 +14,9 @@ Also: https://github.com/cotes2020/jekyll-theme-chirpy/blob/master/_layouts/cate
 {% include lang.html %}
 
 
-在这里，记录和分享最近一周读到的技术类文章，python 为主。
+记录和分享最近读到的技术类文章，主要为 python 相关。
 
-{% assign posts = site.posts | where: 'categories', 'weekly' %}
+{% assign posts = site.posts | where: 'categories', 'reading' %}
 
 <div id="page-category">
   <ul class="content ps-0">

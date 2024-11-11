@@ -244,13 +244,13 @@ def create_post(args):
 def create_weekly(args):
     files = os.listdir(os.path.join(settings.BASE_DIR, args.dir_path))
     if not files:
-        title = '一周见闻 #1'
+        title = '#1'
     else:
         file = max(files)
         no = file.rsplit('#', maxsplit=1)[-1]
         no = no.split('.')[0]
         no = int(no) + 1
-        title = f'一周见闻 #{no}'
+        title = f'#{no}'
     
     args.title = title
     create_post(args)
@@ -301,9 +301,9 @@ def main():
                             help="if specified, will read the file's content as post content")
     post_parser.set_defaults(func=create_post)
 
-    weekly_parser = subparser.add_parser('weekly')
+    weekly_parser = subparser.add_parser('reading')
     weekly_parser.set_defaults(func=create_weekly)
-    weekly_parser.add_argument('-d --dir-path', dest='dir_path', default='_posts\weekly')
+    weekly_parser.add_argument('-d --dir-path', dest='dir_path', default='_posts\reading')
 
     args = parser.parse_args(sys.argv[1:])
 
