@@ -195,7 +195,7 @@ def read_posts(config=True):
             yield configfile, f.read()
 
 
-def create_post(args):
+def create_post(args, extra_properties=None):
     title = args.title
 
     if not title:
@@ -230,6 +230,11 @@ def create_post(args):
         f.write(f'date: {date}\n')
         f.write(f'categories: [{categories}]\n')
         f.write(f'tags: [{tags}]\n')
+
+        if extra_properties:
+            for k, v in extra_properties.items():
+                f.write(f'{k}: {v}')
+
         f.write('---\n\n')
 
         if args.file:
@@ -253,7 +258,7 @@ def create_weekly(args):
         title = f'#{no}'
     
     args.title = title
-    create_post(args)
+    create_post(args, extra_properties={'hidden': 'true'})
 
 
 def check_vertical_line(args):
