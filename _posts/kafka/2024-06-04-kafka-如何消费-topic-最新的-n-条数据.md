@@ -1,10 +1,13 @@
 ---
-layout: post
-title: "kafka 如何消费 topic 最新的 n 条数据"
-date: 2024-06-04 17:55 +0800
-categories: [kafka]
-tags: [kafka]
+categories:
+- kafka
 cnblogid: 18231420
+date: 2024-06-04 17:55 +0800
+id: 0fcbee30-f184-4840-ac6e-6d297e98841a
+layout: post
+tags:
+- kafka
+title: kafka 如何消费 topic 最新的 n 条数据
 ---
 
 ### 使用 kafka 命令行
@@ -101,4 +104,3 @@ else:
 consumer.close()
 
 ```
-

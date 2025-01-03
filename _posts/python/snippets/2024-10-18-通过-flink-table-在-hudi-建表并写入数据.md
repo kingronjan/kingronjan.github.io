@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "通过 flink table 在 hudi 建表并写入数据"
+categories:
+- python
+- snippets
 date: 2024-10-18 17:28 +0800
-categories: [python, snippets]
-tags: [python, snippets]
 hidden: true
+id: f6fcdb00-b639-445a-a3c1-b1b692c6bd7e
+layout: post
+tags:
+- python
+- snippets
+title: 通过 flink table 在 hudi 建表并写入数据
 ---
 
 ```python

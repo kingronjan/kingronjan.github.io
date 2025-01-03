@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "从 mysql 读取数据并通过 stream_load 写入到 doris"
+categories:
+- python
+- snippets
 date: 2024-10-18 17:26 +0800
-categories: [python, snippets]
-tags: [python, snippets]
 hidden: true
+id: aa41899e-9c89-4e0a-9459-4c3ad012c4cc
+layout: post
+tags:
+- python
+- snippets
+title: 从 mysql 读取数据并通过 stream_load 写入到 doris
 ---
 
 ```python
@@ -46,4 +51,3 @@ print(resp.url, resp.status_code)
 print(resp.text)
 
 ```
-

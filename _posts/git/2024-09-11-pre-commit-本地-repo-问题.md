@@ -1,13 +1,15 @@
 ---
-layout: post
-title: "pre-commit 本地 repo 问题"
+categories:
+- git
 date: 2024-09-11 13:59 +0800
-categories: [git]
-tags: [git, pre-commit]
-description: "记录使用本地 repo 遇到的问题和解决方案"
+description: 记录使用本地 repo 遇到的问题和解决方案
+id: 9ce2045b-addb-4029-8dfa-d805945f1cf4
+layout: post
+tags:
+- git
+- pre-commit
+title: pre-commit 本地 repo 问题
 ---
-
-
 
 ### Use local repos
 

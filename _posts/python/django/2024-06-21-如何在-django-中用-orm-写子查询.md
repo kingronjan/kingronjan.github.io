@@ -1,10 +1,16 @@
 ---
-layout: post
-title: "如何在 django 中用 orm 写子查询"
-date: 2024-06-21 08:37 +0800
-categories: [python, django]
-tags: [django, orm, python]
+categories:
+- python
+- django
 cnblogid: 18259854
+date: 2024-06-21 08:37 +0800
+id: c246b0ab-cd0b-428e-8797-d96030dec416
+layout: post
+tags:
+- django
+- orm
+- python
+title: 如何在 django 中用 orm 写子查询
 ---
 
 如果想实现下面的 SQL：
@@ -32,4 +38,3 @@ books = Book.objects.filter(author_name__in=authores)
 ```sql
 SELECT * FROM book WHERE author_name IN (SELECT name FROM author WHERE name LIKE 'kingron%')
 ```
-

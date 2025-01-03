@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "DataX HiveReader"
-date: 2024-06-03 13:54 +0800
-categories: [java, datax]
-tags: [datax, 数据同步]
+categories:
+- java
+- datax
 cnblogid: 18228748
+date: 2024-06-03 13:54 +0800
+id: 4cb49979-ea3a-44f7-ab1d-a7c77e8c506d
+layout: post
+tags:
+- datax
+- 数据同步
+title: DataX HiveReader
 ---
 
 # DataX HiveReader
@@ -287,4 +292,3 @@ Hivereader插件:从Hive表读取数据
   
   }
   ```
-

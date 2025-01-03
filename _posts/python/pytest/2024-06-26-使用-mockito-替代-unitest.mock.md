@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "使用 mockito 替代 unitest.mock"
-date: 2024-06-26 09:50 +0800
-categories: [python, pytest]
-tags: [pytest, mock]
+categories:
+- python
+- pytest
 cnblogid: 18268291
+date: 2024-06-26 09:50 +0800
+id: 139fbb65-c884-4047-a048-8039e323f2c8
+layout: post
+tags:
+- pytest
+- mock
+title: 使用 mockito 替代 unitest.mock
 ---
 
 ### 介绍

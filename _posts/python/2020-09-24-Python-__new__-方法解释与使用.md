@@ -1,10 +1,12 @@
 ---
-layout: post
-title: "Python __new__ 方法解释与使用"
-date: 2020-09-24 23:57 +0800
-categories: [python]
-tags: []
+categories:
+- python
 cnblogid: 13727461
+date: 2020-09-24 23:57 +0800
+id: f0d82595-45b8-49dc-81a8-f14567cbd641
+layout: post
+tags: []
+title: Python __new__ 方法解释与使用
 ---
 
 # 解释

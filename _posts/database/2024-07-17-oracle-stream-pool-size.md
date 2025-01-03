@@ -1,10 +1,13 @@
 ---
-layout: post
-title: "oracle stream pool size"
-date: 2024-07-17 18:09 +0800
-categories: [oracle]
-tags: [oracle]
+categories:
+- oracle
 cnblogid: 18308044
+date: 2024-07-17 18:09 +0800
+id: d01dee64-04c8-4f98-a3c4-39caa8b3461d
+layout: post
+tags:
+- oracle
+title: oracle stream pool size
 ---
 
 See: [STREAMS_POOL_SIZE](https://docs.oracle.com/en/database/oracle/oracle-database/21/refrn/STREAMS_POOL_SIZE.html)
@@ -15,7 +18,7 @@ See: [STREAMS_POOL_SIZE](https://docs.oracle.com/en/database/oracle/oracle-datab
 
 ## STREAMS_POOL_SIZE 参数详解
 
-STREAMS_POOL_SIZE 初始化参数用于帮助确定 Streams 池的大小。它是一个大整数类型参数，其语法为 STREAMS_POOL_SIZE = integer [K | M | G]，默认值为 0。该参数可通过 ALTER SYSTEM 修改，但在可插拔数据库 (PDB) 中不可修改。
+STREAMS_POOL_SIZE 初始化参数用于帮助确定 Streams 池的大小。它是一个大整数类型参数，其语法为 `STREAMS_POOL_SIZE = integer [K | M | G]`，默认值为 0。该参数可通过 ALTER SYSTEM 修改，但在可插拔数据库 (PDB) 中不可修改。
 
 该参数的取值范围为最小值 0（大于 0 的值将向上取整到最近的粒度大小），最大值为操作系统相关的。
 
@@ -48,4 +51,3 @@ Streams 池是一个共享资源，进程从 Streams 池中使用的内存量由
 有关为 XStream In 配置配置 Streams 池的信息，请参见《Oracle 数据库 XStream 指南》。
 
 有关 dbms_aqadm 包的更多信息，请参见《Oracle 数据库 PL/SQL 包和类型参考》。
-

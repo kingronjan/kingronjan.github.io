@@ -1,13 +1,17 @@
 ---
-layout: post
-title: "CentOS 7 安装 MySQL"
-date: 2021-07-13 17:26 +0800
-categories: [database, mysql]
-tags: [database, mysql, centos]
+categories:
+- database
+- mysql
 cnblogid: 15007512
+date: 2021-07-13 17:26 +0800
+id: bbb13b05-c032-4598-9161-6ffae552ae9b
+layout: post
+tags:
+- database
+- mysql
+- centos
+title: CentOS 7 安装 MySQL
 ---
-
-
 
 1. 下载安装包
 
@@ -91,4 +95,3 @@ cnblogid: 15007512
    # 重新启动防火墙
    firewall-cmd --reload
    ```
-

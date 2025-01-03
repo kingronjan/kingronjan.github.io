@@ -1,9 +1,14 @@
 ---
-layout: post
-title: "supervisord 停止时没有停止运行中的 celery 进程"
+categories:
+- python
+- celery
 date: 2024-09-29 14:06 +0800
-categories: [python, celery]
-tags: [python, celery]
+id: c8e061cc-389b-474d-aca7-1dafb3fe07bc
+layout: post
+tags:
+- python
+- celery
+title: supervisord 停止时没有停止运行中的 celery 进程
 ---
 
 使用 supervisor 服务管理 celery 进程时遇到这样一个问题：

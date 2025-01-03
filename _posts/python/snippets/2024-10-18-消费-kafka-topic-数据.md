@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "消费 kafka topic 数据"
+categories:
+- python
+- snippets
 date: 2024-10-18 17:26 +0800
-categories: [python, snippets]
-tags: [python, snippets]
 hidden: true
+id: ca730ed2-7657-4158-b034-b3e0ed52dab7
+layout: post
+tags:
+- python
+- snippets
+title: 消费 kafka topic 数据
 ---
 
 ```python
@@ -39,4 +44,3 @@ with consumer(
         break
 
 ```
-

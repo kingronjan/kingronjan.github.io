@@ -1,12 +1,15 @@
 ---
-layout: post
-title: "debezium mysql connector 加表出现 Error processing binlog event"
+categories:
+- java
+- debezium
 date: 2024-09-26 17:57 +0800
-categories: [java, debezium]
-tags: [java, debezium]
+id: cf8f5822-6b13-4a91-9d51-1fef31063013
+layout: post
+tags:
+- java
+- debezium
+title: debezium mysql connector 加表出现 Error processing binlog event
 ---
-
-
 
 ### 现象
 

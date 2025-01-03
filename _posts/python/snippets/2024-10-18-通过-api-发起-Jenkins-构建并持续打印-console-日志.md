@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "通过 api 发起 Jenkins 构建并持续打印 console 日志"
+categories:
+- python
+- snippets
 date: 2024-10-18 17:28 +0800
-categories: [python, snippets]
-tags: [python, snippets]
 hidden: true
+id: aa7b23c5-39e0-4031-a471-a71cb82dbaae
+layout: post
+tags:
+- python
+- snippets
+title: 通过 api 发起 Jenkins 构建并持续打印 console 日志
 ---
 
 ```python
@@ -84,4 +89,3 @@ if __name__ == '__main__':
     make_new_build()
 
 ```
-

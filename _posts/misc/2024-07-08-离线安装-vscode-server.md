@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "离线安装 vscode-server"
-date: 2024-07-08 22:15 +0800
-categories: [code-server]
-tags: [vscode, code-server, ide]
+categories:
+- code-server
 cnblogid: 18290792
+date: 2024-07-08 22:15 +0800
+id: 7e7d5ffd-497a-492e-b8d2-fba3a7cb6f6b
+layout: post
+tags:
+- vscode
+- code-server
+- ide
+title: 离线安装 vscode-server
 ---
 
 1. 获取当前版本 vscode 的 commit_id：Help - > About -> Commit
@@ -32,4 +37,3 @@ cnblogid: 18290792
    mkdir -p ~/.vscode-server/extensions
    cp -r ${PATH_TO_YOUR_VSCODE_EXTENSIONS}/extensions/* ~/.vscode-server/extensions
    ```
-

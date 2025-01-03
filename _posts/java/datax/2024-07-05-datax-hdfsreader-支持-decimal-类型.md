@@ -1,10 +1,16 @@
 ---
-layout: post
-title: "datax hdfsreader 支持 decimal 类型"
-date: 2024-07-05 18:27 +0800
-categories: [java, datax]
-tags: [datax, 数据同步, hive]
+categories:
+- java
+- datax
 cnblogid: 18286409
+date: 2024-07-05 18:27 +0800
+id: 486fa1a7-d3a5-45c6-b5da-874e551bbac6
+layout: post
+tags:
+- datax
+- 数据同步
+- hive
+title: datax hdfsreader 支持 decimal 类型
 ---
 
 ### 参考

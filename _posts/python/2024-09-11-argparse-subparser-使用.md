@@ -1,13 +1,14 @@
 ---
-layout: post
-title: "argparse subparser 使用"
+categories:
+- python
 date: 2024-09-11 14:35 +0800
-categories: [python]
-tags: [python]
-description: "命令分支再多也不慌"
+description: 命令分支再多也不慌
+id: 2ef1388f-9451-415f-b472-d66f1806427b
+layout: post
+tags:
+- python
+title: argparse subparser 使用
 ---
-
-
 
 ### Add subparser
 
@@ -95,4 +96,3 @@ On checkout, args.subcmd='checkout', args.num='11'
 $ python .\foo.py co 11      
 On checkout, args.subcmd='co', args.num='11'
 ```
-

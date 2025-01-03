@@ -3,16 +3,23 @@ import html
 import os
 import os.path
 import re
-import sys
-import time
-from pathlib import Path
+import logging
+import uuid
+from datetime import datetime
 
-from prettymd import format
+from fnmatch import fnmatch
+
+import frontmatter
 
 try:
     import toolconf as settings
 except ImportError:
     raise FileExistsError('Settings file does not exists, create one like toolconf.py.template')
+
+
+logging.basicConfig(**settings.LOG)
+
+logger = logging.getLogger('tool')
 
 
 def get_filename(title):
@@ -195,74 +202,8 @@ def read_posts(config=True):
             yield configfile, f.read()
 
 
-def create_post(args, extra_properties=None):
-    title = args.title
-
-    if not title:
-        if not args.file:
-            raise ValueError('no file and no title specified')
-
-        title = os.path.split(args.file)[-1]
-        title, filetype = title.rsplit('.', maxsplit=1)
-
-    else:
-        filetype = 'md'
-
-    categories = args.dir_path.split('_posts')[-1]
-    categories = categories.strip(os.sep)
-    categories = categories.split(os.sep)
-    categories = ', '.join(categories)
-
-    tags = categories.lower()
-
-    date = time.strftime('%Y-%m-%d %H:%M %z')
-    filename = get_filename(title)
-    filename = date.split()[0] + '-' + filename + '.' + filetype
-
-    base_dir = Path(__file__).parent.absolute()
-    filepath = base_dir / args.dir_path / filename
-
-    # XXX: suport template/config file for each folder.
-    with open(filepath, 'w', encoding='utf8') as f:
-        f.write('---\n')
-        f.write('layout: post\n')
-        f.write(f'title: "{title}"\n')
-        f.write(f'date: {date}\n')
-        f.write(f'categories: [{categories}]\n')
-        f.write(f'tags: [{tags}]\n')
-
-        if extra_properties:
-            for k, v in extra_properties.items():
-                f.write(f'{k}: {v}')
-
-        f.write('---\n\n')
-
-        if args.file:
-            with open(args.file, 'r', encoding='utf8') as rf:
-                content = format(rf.read(), style='code')
-                f.write(content)
-
-    print(f'post created at: {filepath}')
-
-
-
-def create_weekly(args):
-    files = os.listdir(os.path.join(settings.BASE_DIR, args.dir_path))
-    if not files:
-        title = '#1'
-    else:
-        file = max(files)
-        no = file.rsplit('#', maxsplit=1)[-1]
-        no = no.split('.')[0]
-        no = int(no) + 1
-        title = f'#{no}'
-    
-    args.title = title
-    create_post(args, extra_properties={'hidden': 'true'})
-
-
 def check_vertical_line(args):
-    if not args.veritical_line:
+    if not args.vertical_line:
         return print('skip check without -v specified')
 
     pattern = re.compile(r'\[.*?(?<!\\)\|.*?\]\(.+?\)')
@@ -274,13 +215,200 @@ def check_vertical_line(args):
 
         for link in links:
             escaped_link = link.replace(r'\|', '|')
-            escaped_link = link.replace('|', r'\|')
+            escaped_link = escaped_link.replace('|', r'\|')
             content = content.replace(link, escaped_link)
 
         with open(filename, 'w', encoding='utf8') as f:
             f.write(content)
         
         print('Vertical line was escaped from ', filename)
+
+
+class PostParser(object):
+
+    def __init__(self, filepath, rootpath, indexes):
+        self.filepath = filepath
+        _, self.filename = os.path.split(self.filepath)
+
+        self.rootpath = rootpath
+        self.indexes = indexes
+
+        if not rootpath.endswith(os.sep):
+            rootpath += os.sep
+
+        self.dirpath = filepath.replace(rootpath, '')
+        self.postid = None
+        self.publish = False
+        self.post = None
+
+    def parse(self):
+        self.post = frontmatter.load(self.filepath)
+        self.publish = self.post.get('publish', True)
+        if not self.publish:
+            return logger.info('Skipped post %s cause publish disabled', self.filepath)
+
+        attr_makes = {
+            'id': self.make_postid,
+            'layout': self.make_layout,
+            'date': self.make_date,
+            'title': self.make_title,
+            'categories': self.make_categories,
+            'tags': self.make_tags,
+        }
+
+        for attr, make in attr_makes.items():
+            if attr not in self.post:
+                value = make()
+                logger.debug('generate default value for %s: %s = %s', self.filepath, attr, value)
+                self.post[attr] = value
+
+        self.postid = self.post['id']
+
+    @staticmethod
+    def make_postid():
+        return str(uuid.uuid4())
+
+    @staticmethod
+    def make_layout():
+        return 'post'
+
+    def make_date(self):
+        stat = os.stat(self.filepath)
+        date = datetime.fromtimestamp(stat.st_mtime)
+        return date.strftime('%Y-%m-%d %H:%M +0800')
+
+    def make_title(self):
+        logger.debug('generating title by %s', self.filename)
+
+        if self.filename.endswith('.md'):
+            filename = self.filename[:-3]
+        else:
+            filename = self.filename
+
+        return filename
+
+    def make_categories(self):
+        filepath, _ = os.path.split(self.filepath)
+        path = filepath.replace(self.rootpath, '')
+        logger.debug('generating categories by path: %s', path)
+        categories = []
+        for x in path.split(os.sep):
+            x = x.strip()
+            if not x:
+                continue
+            categories.append(x)
+        return categories
+
+    def make_tags(self):
+        return self.make_categories()
+
+    def sync(self):
+        self.parse()
+
+        if self.postid in self.indexes:
+            target_file = self.indexes[self.postid]
+        else:
+            target_file = None
+
+        if not self.publish:
+            if target_file:
+                logger.info('remove published file: %s (cause publish disabled)', target_file)
+            os.remove(target_file)
+            self.indexes.pop(self.postid)
+            return
+
+        if not target_file:
+            prefix = self.post['date'].split()[0] + '-'
+            filename = self.get_filename()
+            target_file = os.path.join(settings.POST_DIR, self.dirpath, prefix + filename)
+
+        frontmatter.dump(self.post, target_file, encoding='utf-8')
+        self.indexes[self.postid] = target_file
+        logger.debug('file %s synced to %s, id: %s', self.filepath, target_file, self.postid)
+
+    def get_filename(self):
+        title = self.filename.replace('|', ' ')
+        title = title.replace('\\', '')
+        title = re.sub(r'\s+', '-', title)
+        return title
+
+
+def sync_posts(args):
+    indexes = {}
+
+    nsynced = 0
+    nskipped = 0
+
+    if not os.path.exists(settings.INDEX_FILE):
+        logger.warning('index file %s does not exist', settings.INDEX_FILE)
+
+    else:
+        with open(settings.INDEX_FILE, 'r', encoding='utf8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                postid, path = line.split(maxsplit=1)
+                indexes[postid] = path
+
+        logger.info('%s indexes loaded from file %s', len(indexes), settings.INDEX_FILE)
+
+    for dirpath, dirnames, filenames in os.walk(args.dirpath):
+        for filename in filenames:
+            if not filename.endswith('.md'):
+                nskipped += 1
+                continue
+
+            fullpath = os.path.join(dirpath, filename)
+
+            skipped = False
+            for pat in settings.IGNORE_FILES:
+                if fnmatch(fullpath, pat):
+                    logger.debug(f'Ignore file {fullpath} which matches {pat}')
+                    skipped = True
+                    break
+
+            if skipped:
+                nskipped += 1
+                continue
+
+            parser = PostParser(fullpath, args.dirpath, indexes)
+            parser.sync()
+            nsynced += 1
+
+    logger.info('done, %s file synced, %s file skipped.' % (nsynced, nskipped))
+
+    with open(settings.INDEX_FILE, 'w', encoding='utf8') as f:
+        f.write('\n'.join(f'{k} {v}' for k, v in indexes.items()))
+        logger.info('%s indexes flushed to %s', len(indexes), settings.INDEX_FILE)
+
+
+def init_posts(args):
+    indexes = []
+
+    for dirpath, dirnames, filenames in os.walk('_posts'):
+        dirs = dirpath.split(os.sep)[1:]
+        target_path = os.path.join(args.dirpath, *dirs)
+        os.makedirs(target_path, exist_ok=True)
+
+        for filename in filenames:
+            if not filename.endswith('.md'):
+                continue
+
+            filepath = os.path.join(dirpath, filename)
+            post = frontmatter.load(filepath)
+            if 'id' not in post:
+                post['id'] = str(uuid.uuid4())
+
+            target_file = os.path.join(target_path, re.sub(r'^\d{4}-\d{2}-\d{2}-', '', filename))
+            frontmatter.dump(post, target_file, encoding='utf8')
+            logger.info('file %s successfully write to %s, id: %s', filepath, target_file, post['id'])
+            indexes.append('%s %s' % (post['id'], filepath))
+
+    with open(settings.INDEX_FILE, 'w', encoding='utf8') as f:
+        f.write('\n'.join(indexes))
+
+    logger.info('index file %s flushed', settings.INDEX_FILE)
 
 
 def main():
@@ -296,21 +424,18 @@ def main():
     asset_parser.set_defaults(func=remove_unused_assets)
 
     check_parser = subparser.add_parser('check')
-    check_parser.add_argument('-v --vertical-line', dest='veritical_line', action='store_true', help='escape vertical line in links, aviod render error')
+    check_parser.add_argument('-v --vertical-line', dest='vertical_line', action='store_true', help='escape vertical line in links, aviod render error')
     check_parser.set_defaults(func=check_vertical_line)
 
-    post_parser = subparser.add_parser('post')
-    post_parser.add_argument('-t --title', dest='title', help='title for post')
-    post_parser.add_argument('-d --dir-path', dest='dir_path', default='_posts', help='which dir for place the new post')
-    post_parser.add_argument('-f --file', dest='file', default=None,
-                            help="if specified, will read the file's content as post content")
-    post_parser.set_defaults(func=create_post)
+    init = subparser.add_parser('init')
+    init.add_argument('-d --dirpath', dest='dirpath', default=r'C:\Users\lineu\OneDrive\blogs')
+    init.set_defaults(func=init_posts)
 
-    weekly_parser = subparser.add_parser('reading')
-    weekly_parser.set_defaults(func=create_weekly)
-    weekly_parser.add_argument('-d --dir-path', dest='dir_path', default='_posts\reading')
+    sync = subparser.add_parser('sync')
+    sync.add_argument('-d --dirpath', dest='dirpath', default=r'C:\Users\lineu\OneDrive\blogs')
+    sync.set_defaults(func=sync_posts)
 
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args()
 
     if args.subcmd:
         args.func(args)

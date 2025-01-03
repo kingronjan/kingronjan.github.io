@@ -1,10 +1,13 @@
 ---
-layout: post
-title: "从 CPython 源码角度看 Python 垃圾回收机制"
-date: 2021-07-20 15:09 +0800
-categories: [python]
-tags: [python]
+categories:
+- python
 cnblogid: 15035055
+date: 2021-07-20 15:09 +0800
+id: ceca2193-39f7-4b78-9464-6dd79c051c79
+layout: post
+tags:
+- python
+title: 从 CPython 源码角度看 Python 垃圾回收机制
 ---
 
 #### 环状双向链表 refchain
@@ -133,4 +136,3 @@ data = 3.14
 #### 参考
 
 1. [python 垃圾回收机制刨析](https://pythonav.com/wiki/detail/6/88/)
-

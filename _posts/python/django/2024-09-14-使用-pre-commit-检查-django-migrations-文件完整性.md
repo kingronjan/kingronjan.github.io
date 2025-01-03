@@ -1,12 +1,16 @@
 ---
-layout: post
-title: "使用 pre-commit 检查 django migrations 文件完整性"
+categories:
+- python
+- django
 date: 2024-09-14 16:26 +0800
-categories: [python, django]
-tags: [python, django, pre-commit]
+id: 5f289e77-2af2-4a27-bed6-4c4c0cff94f6
+layout: post
+tags:
+- python
+- django
+- pre-commit
+title: 使用 pre-commit 检查 django migrations 文件完整性
 ---
-
-
 
 最近项目中老是遇到有的同事做了 ORM 模型更改，但是没有生成相关的迁移文件，或者虽然生成了，但是存在冲突，没有解决就推到代码库了，导致项目部署时没有应用到最新的表结构，这种低级错误本来应该在代码提交时就可以发现，这个时候 pre-commit 就派上用场了，通过定制 pre-commit 钩子，在提交前检查是否存在模型更改但没有迁移，或者迁移存在冲突，如果有就中断提交，直到修复后才让提交成功。
 

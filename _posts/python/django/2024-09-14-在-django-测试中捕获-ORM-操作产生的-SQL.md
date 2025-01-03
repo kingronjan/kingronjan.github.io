@@ -1,14 +1,15 @@
 ---
-layout: post
-title: "在 django 测试中捕获 ORM 操作产生的 SQL"
+categories:
+- python
+- django
 date: 2024-09-14 16:24 +0800
-categories: [python, django]
-tags: [python, django]
+id: 1dcda07b-7823-4a21-a1fd-857c9ac73c89
+layout: post
+tags:
+- python
+- django
+title: 在 django 测试中捕获 ORM 操作产生的 SQL
 ---
-
-
-
-
 
 ### 方法
 

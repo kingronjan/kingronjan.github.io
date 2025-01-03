@@ -1,10 +1,16 @@
 ---
-layout: post
-title: "[转] MySQL binlog 日志自动清理及手动删除"
-date: 2024-06-21 21:41 +0800
-categories: [databse, mysql]
-tags: [mysql, database, binlog]
+categories:
+- databse
+- mysql
 cnblogid: 18261558
+date: 2024-06-21 21:41 +0800
+id: 3cf595c6-3a4c-4db1-88a8-50be5fc31fb6
+layout: post
+tags:
+- mysql
+- database
+- binlog
+title: '[转] MySQL binlog 日志自动清理及手动删除'
 ---
 
 ### 参考
@@ -111,4 +117,3 @@ PURGE MASTER LOGS BEFORE DATE_SUB( NOW( ), INTERVAL 3 DAY);
 #### 清除 `binlog` 时，对从 `mysql` 的影响
 > 如果您有一个活性的从属服务器，该服务器当前正在读取您正在试图删除的日志之一，则本语句不会起作用，而是会失败，并伴随一个错误。
 > 不过，如果从属服务器是休止的，并且您碰巧清理了其想要读取的日志之一，则从属服务器启动后不能复制。当从属服务器正在复制时，本语句可以安全运行。您不需要停止它们。
-

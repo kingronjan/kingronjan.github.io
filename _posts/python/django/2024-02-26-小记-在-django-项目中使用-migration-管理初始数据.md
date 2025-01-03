@@ -1,10 +1,16 @@
 ---
-layout: post
-title: "小记 | 在 django 项目中使用 migration 管理初始数据"
-date: 2024-02-26 14:30 +0800
-categories: [python, django]
-tags: [python, django, orm]
+categories:
+- python
+- django
 cnblogid: 18034274
+date: 2024-02-26 14:30 +0800
+id: 50db4403-212e-46c8-9fa7-c555990490c2
+layout: post
+tags:
+- python
+- django
+- orm
+title: 小记 | 在 django 项目中使用 migration 管理初始数据
 ---
 
 最近接触的项目中自带一些初始数据，像页面菜单的管理，默认用户、默认配置等等，在初始化数据库表结构后，将相关数据写入表中，方便用户使用。之前的处理方式是将这些数据存放到一个 `json` 文件中，再在执行完 `python manage.py migrate` 之后，使用命令 `python manage.py loaddata <json-file>` 将这些数据导入到数据库对应的表中。

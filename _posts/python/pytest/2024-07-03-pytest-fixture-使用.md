@@ -1,10 +1,16 @@
 ---
-layout: post
-title: "pytest fixture 使用"
-date: 2024-07-03 14:39 +0800
-categories: [python, pytest]
-tags: [pytest, python, 参考文档]
+categories:
+- python
+- pytest
 cnblogid: 18281594
+date: 2024-07-03 14:39 +0800
+id: b17444e7-b38a-401c-9e9c-726701d3844b
+layout: post
+tags:
+- pytest
+- python
+- 参考文档
+title: pytest fixture 使用
 ---
 
 #### 参考

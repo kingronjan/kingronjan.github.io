@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "生产 kafka topic 数据"
+categories:
+- python
+- snippets
 date: 2024-10-18 17:26 +0800
-categories: [python, snippets]
-tags: [python, snippets]
 hidden: true
+id: 7cc39cf1-df48-4ffb-86b0-ae220d4e558e
+layout: post
+tags:
+- python
+- snippets
+title: 生产 kafka topic 数据
 ---
 
 ```python
@@ -67,4 +72,3 @@ with open('<stringfy-py-message-file>', 'r') as f:
     producer.send(topic_name, key=message['key'], value=message['value']).get(timeout=10)
 
 ```
-

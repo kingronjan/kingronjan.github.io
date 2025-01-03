@@ -7,11 +7,11 @@ repos:
       entry: python tool.py assets -c
       files: '\d\.\d+$'
       always_run: true
-      additional_dependencies: ['prettymd']
+      additional_dependencies: ['prettymd', 'frontmatter']
     - id: check-vertical
       name: check-vertical
       language: python
       entry: python tool.py check -v
       files: '\d\.\d+$'
       always_run: true
-      additional_dependencies: ['prettymd']
+      additional_dependencies: ['prettymd', 'frontmatter']

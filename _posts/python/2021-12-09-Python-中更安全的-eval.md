@@ -1,10 +1,12 @@
 ---
-layout: post
-title: "Python 中更安全的 eval"
-date: 2021-12-09 15:24 +0800
-categories: [python]
-tags: []
+categories:
+- python
 cnblogid: 15667558
+date: 2021-12-09 15:24 +0800
+id: af6311e0-2801-41a6-8f69-43ed5bf8d037
+layout: post
+tags: []
+title: Python 中更安全的 eval
 ---
 
 ### 问题
@@ -35,4 +37,3 @@ eval("os.popen('rm -rf *')")
 
 - 使用 `literal_eval` 时，足够复杂或是巨大的字符串可能导致 Python 解释器的崩溃，因为 Python 的 AST 编译器是有栈深限制的
 - `literal_eval` 解析异常时，可能会抛出 `ValueError`, `TypeError`, `SyntaxError`, `MemoryError` 或 `RecursionError`，这取决于传入的字符串
-

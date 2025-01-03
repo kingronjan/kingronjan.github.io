@@ -1,10 +1,16 @@
 ---
-layout: post
-title: "django | 为 model 定义逻辑外键"
-date: 2024-06-25 22:36 +0800
-categories: [python, django]
-tags: [django, orm, python]
+categories:
+- python
+- django
 cnblogid: 18267977
+date: 2024-06-25 22:36 +0800
+id: 6d19d11a-340f-4ba1-b97e-5d2f6f0d116b
+layout: post
+tags:
+- django
+- orm
+- python
+title: django | 为 model 定义逻辑外键
 ---
 
 ### 问题

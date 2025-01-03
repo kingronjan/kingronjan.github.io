@@ -1,10 +1,13 @@
 ---
-layout: post
-title: "记一次 pickle 对象引发的 stack overflow 异常"
-date: 2023-09-26 09:46 +0800
-categories: [python]
-tags: [python]
+categories:
+- python
 cnblogid: 17729426
+date: 2023-09-26 09:46 +0800
+id: 8afec278-efc0-4ee7-8ff5-7bd469585935
+layout: post
+tags:
+- python
+title: 记一次 pickle 对象引发的 stack overflow 异常
 ---
 
 ### 问题

@@ -1,10 +1,12 @@
 ---
-layout: post
-title: "减轻内存负担，在 pymysql 中使用 SSCursor 查询结果集较大的 SQL"
-date: 2020-10-25 21:04 +0800
-categories: [python]
-tags: []
+categories:
+- python
 cnblogid: 13875223
+date: 2020-10-25 21:04 +0800
+id: 853d5a9e-c213-4208-823e-3fa0afa29cf5
+layout: post
+tags: []
+title: 减轻内存负担，在 pymysql 中使用 SSCursor 查询结果集较大的 SQL
 ---
 
 ### 前言

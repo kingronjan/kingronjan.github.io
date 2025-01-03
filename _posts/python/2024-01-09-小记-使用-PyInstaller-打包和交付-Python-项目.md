@@ -1,10 +1,12 @@
 ---
-layout: post
-title: "小记 | 使用 PyInstaller 打包和交付 Python 项目"
-date: 2024-01-09 10:14 +0800
-categories: [python]
-tags: []
+categories:
+- python
 cnblogid: 17953781
+date: 2024-01-09 10:14 +0800
+id: 64c0cceb-69c7-40b0-ad3c-a3bc1b4ac5ec
+layout: post
+tags: []
+title: 小记 | 使用 PyInstaller 打包和交付 Python 项目
 ---
 
 [PyInstaller](https://github.com/pyinstaller/pyinstaller) 可以将 Python 项目打包成一个可执行文件，或是一个文件夹，包含可执行文件以及依赖包。方便我们将 Python 项目交付给用户，方便用户使用的同时也可以一定程度的保护项目源代码。本文将介绍如何简单使用 PyInstaller 打包。
@@ -411,4 +413,3 @@ PyInstaller 会在运行时将打包文件放在 `sys._MEIPASS` 所指向的路�
 ### 参考：
 
 更多用法可参考官方文档：[PyInstaller Manual — PyInstaller 6.3.0 documentation](https://pyinstaller.org/en/stable/)
-

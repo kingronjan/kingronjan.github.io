@@ -1,10 +1,12 @@
 ---
-layout: post
-title: "python 中 try...finally... 的优雅实现"
-date: 2020-11-24 23:37 +0800
-categories: [python]
-tags: []
+categories:
+- python
 cnblogid: 14033525
+date: 2020-11-24 23:37 +0800
+id: f724a8f3-7ef0-4f57-9687-b86ba91a87d4
+layout: post
+tags: []
+title: python 中 try...finally... 的优雅实现
 ---
 
 ### 1. 关于 try.. finally..

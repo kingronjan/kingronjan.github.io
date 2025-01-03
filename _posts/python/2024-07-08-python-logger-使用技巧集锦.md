@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "python logger 使用技巧集锦"
-date: 2024-07-08 16:40 +0800
-categories: [python]
-tags: [python, 日志, logging]
+categories:
+- python
 cnblogid: 18290266
+date: 2024-07-08 16:40 +0800
+id: 57f73765-ab73-4758-8883-754e2ff3901e
+layout: post
+tags:
+- python
+- 日志
+- logging
+title: python logger 使用技巧集锦
 ---
 
 ### 1. 简单使用
@@ -156,4 +161,4 @@ def get_logger(name, level='DEBUG', folder=None, filename_fmt=None):
 2. [如何添加自定义字段到Python日志格式字符串？](https://codeday.me/bug/20171130/102047.html)        
 3. [python logging模块使用教程](https://www.jianshu.com/p/feb86c06c4f4)            
 4. [traceback --- Print or retrieve a stack traceback — Python 3.7.3 文档](https://docs.python.org/zh-cn/3/library/traceback.html)        
-5. [模块 logging --- Python 的日志记录工具 — Python 3.7.3 文档](https://docs.python.org/zh-cn/3/library/logging.html)          
+5. [模块 logging --- Python 的日志记录工具 — Python 3.7.3 文档](https://docs.python.org/zh-cn/3/library/logging.html)

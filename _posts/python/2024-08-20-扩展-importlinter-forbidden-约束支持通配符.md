@@ -1,10 +1,12 @@
 ---
-layout: post
-title: "扩展 importlinter forbidden 约束支持通配符"
-date: 2024-08-20 11:11 +0800
 categories: []
-tags: [python]
 cnblogid: 18369095
+date: 2024-08-20 11:11 +0800
+id: 1cd9d6ad-9e1b-45c9-aab2-7586fa2fb0b3
+layout: post
+tags:
+- python
+title: 扩展 importlinter forbidden 约束支持通配符
 ---
 
 ### 1. 前言

@@ -1,10 +1,15 @@
 ---
-layout: post
-title: "mysqlwirter"
-date: 2024-06-03 15:50 +0800
-categories: [java, datax]
-tags: [datax, 数据同步]
+categories:
+- java
+- datax
 cnblogid: 18229047
+date: 2024-06-03 15:50 +0800
+id: 5af58bdd-6f33-4f1f-9a05-4e1fccd75137
+layout: post
+tags:
+- datax
+- 数据同步
+title: mysqlwirter
 ---
 
 # DataX MysqlWriter
