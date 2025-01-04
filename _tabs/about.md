@@ -20,7 +20,12 @@ operations.
 Used to be a web scraper (crawler) engineer and are now working as a Python backend developer, primarily using Django
 and Celery.
 
-一些最近的开源项目 / Some recent projects：
+#### 🔧 项目 / Projects
+
+下面是我最近开发的一些项目，欢迎使用。
+
+Here are some of the projects I have recently worked on, Feel free to use them.
+
 - **[kingronjan/wonderpatch](https://github.com/kingronjan/wonderpatch)** A better patch tools for python tests.
 - **[kingronjan/prettymd](https://github.com/kingronjan/prettymd)** A tool that formats markdown text in Chinese.
 - **[kingronjan/scrapy_ajax_utils](https://github.com/kingronjan/scrapy_ajax_utils)** utils for crawl ajax page in scrapy project.
