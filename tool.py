@@ -4,6 +4,8 @@ import os
 import os.path
 import re
 import logging
+import subprocess
+import sys
 import uuid
 from datetime import datetime
 
@@ -382,6 +384,55 @@ def sync_posts(args):
         f.write('\n'.join(f'{k} {v}' for k, v in indexes.items()))
         logger.info('%s indexes flushed to %s', len(indexes), settings.INDEX_FILE)
 
+    if not args.git:
+        return
+
+    max_retries = 1
+    retried = 0
+    failed = False
+
+    while retried <= max_retries:
+        files = get_unstaged_files()
+        if not files:
+            failed = True
+            break
+
+        os.system('git add ' + ' '.join(files))
+        if os.system('git commit -m "update posts."'):
+            failed = True
+        else:
+            failed = False
+        retried += 1
+
+    if failed:
+        sys.exit(1)
+
+    os.system('git push')
+
+
+def get_unstaged_files():
+    logger.info('Fetching changed files...')
+    result = subprocess.check_output('git status', shell=True, text=True)
+    result = re.search(r'Changes not staged for commit:\n(.*?)(no changes|$)', result, re.S)
+    if not result:
+        return logger.info('No changes added to commit')
+
+    result = result.groups()[0]
+    files = []
+    for file in result.split('\n'):
+        file = file.strip()
+        if not file or file.startswith('(use'):
+            continue
+        opr, file = file.split(maxsplit=1)
+        logger.debug('find %s file %s', opr, file)
+        files.append(file)
+
+    logger.info('%s files found', len(files))
+    if not files:
+        return
+
+    return files
+
 
 def init_posts(args):
     indexes = []
@@ -433,6 +484,7 @@ def main():
 
     sync = subparser.add_parser('sync')
     sync.add_argument('-d --dirpath', dest='dirpath', default=r'C:\Users\lineu\OneDrive\blogs')
+    sync.add_argument('-g --git', dest='git', action='store_true')
     sync.set_defaults(func=sync_posts)
 
     args = parser.parse_args()
