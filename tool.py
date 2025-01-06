@@ -398,7 +398,7 @@ def sync_posts(args):
             break
 
         os.system('git add ' + ' '.join(files))
-        if os.system('git commit -m "update posts."'):
+        if os.system('git commit -m "%s"' % args.message):
             failed = True
         else:
             failed = False
@@ -424,7 +424,7 @@ def get_unstaged_files():
         if not file or file.startswith('(use'):
             continue
         opr, file = file.split(maxsplit=1)
-        logger.debug('find %s file %s', opr, file)
+        logger.info('find unstaged file: %s %s', opr, file)
         files.append(file)
 
     logger.info('%s files found', len(files))
@@ -485,6 +485,7 @@ def main():
     sync = subparser.add_parser('sync')
     sync.add_argument('-d --dirpath', dest='dirpath', default=r'C:\Users\lineu\OneDrive\blogs')
     sync.add_argument('-g --git', dest='git', action='store_true')
+    sync.add_argument('-m --message', dest='message', default='update posts.')
     sync.set_defaults(func=sync_posts)
 
     args = parser.parse_args()
