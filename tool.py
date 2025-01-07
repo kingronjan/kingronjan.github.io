@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import html
 import os
 import os.path
@@ -226,6 +227,27 @@ def check_vertical_line(args):
         print('Vertical line was escaped from ', filename)
 
 
+class Counter(object):
+
+    def __init__(self):
+        self.nsynced = 0
+        self.nskipped = 0
+        self.nchanged = 0
+
+    def incr_synced(self, num=1):
+        self.nsynced += num
+
+    def incr_skipped(self, num=1):
+        self.nskipped += num
+
+    def incr_changed(self, num=1):
+        self.nchanged += num
+
+    @property
+    def total(self):
+        return self.nskipped + self.nchanged
+
+
 class PostParser(object):
 
     def __init__(self, filepath, rootpath, indexes):
@@ -304,11 +326,27 @@ class PostParser(object):
     def make_tags(self):
         return self.make_categories()
 
+    def digest(self):
+        with open(self.filepath, 'rb') as f:
+            md5 = hashlib.md5()
+            md5.update(f.read())
+            return md5.hexdigest()
+
     def sync(self):
         self.parse()
+        raw_digest = self.digest()
 
         if self.postid in self.indexes:
             target_file = self.indexes[self.postid]
+            if ' ' in target_file:
+                digest, target_file = target_file.split(maxsplit=1)
+            else:
+                digest = None
+
+            if digest and digest == raw_digest:
+                logger.debug('file %s no changes (digest: %s)', self.filepath, digest)
+                return False
+
         else:
             target_file = None
 
@@ -317,7 +355,7 @@ class PostParser(object):
                 logger.info('remove published file: %s (cause publish disabled)', target_file)
             os.remove(target_file)
             self.indexes.pop(self.postid)
-            return
+            return True
 
         if not target_file:
             prefix = self.post['date'].split()[0] + '-'
@@ -325,8 +363,9 @@ class PostParser(object):
             target_file = os.path.join(settings.POST_DIR, self.dirpath, prefix + filename)
 
         frontmatter.dump(self.post, target_file, encoding='utf-8')
-        self.indexes[self.postid] = target_file
+        self.indexes[self.postid] = raw_digest + ' ' + target_file
         logger.debug('file %s synced to %s, id: %s', self.filepath, target_file, self.postid)
+        return True
 
     def get_filename(self):
         title = self.filename.replace('|', ' ')
@@ -337,9 +376,7 @@ class PostParser(object):
 
 def sync_posts(args):
     indexes = {}
-
-    nsynced = 0
-    nskipped = 0
+    counter = Counter()
 
     if not os.path.exists(settings.INDEX_FILE):
         logger.warning('index file %s does not exist', settings.INDEX_FILE)
@@ -358,7 +395,7 @@ def sync_posts(args):
     for dirpath, dirnames, filenames in os.walk(args.dirpath):
         for filename in filenames:
             if not filename.endswith('.md'):
-                nskipped += 1
+                counter.incr_skipped()
                 continue
 
             fullpath = os.path.join(dirpath, filename)
@@ -371,18 +408,24 @@ def sync_posts(args):
                     break
 
             if skipped:
-                nskipped += 1
+                counter.incr_skipped()
                 continue
 
             parser = PostParser(fullpath, args.dirpath, indexes)
-            parser.sync()
-            nsynced += 1
+            if parser.sync():
+                counter.incr_synced()
+                counter.incr_changed()
+            else:
+                counter.incr_skipped()
 
-    logger.info('done, %s file synced, %s file skipped.' % (nsynced, nskipped))
+    logger.info('Done, %s file processed, %s file changed, %s file synced, %s file skipped.' % (counter.total, counter.nchanged, counter.nsynced, counter.nskipped))
 
-    with open(settings.INDEX_FILE, 'w', encoding='utf8') as f:
-        f.write('\n'.join(f'{k} {v}' for k, v in indexes.items()))
-        logger.info('%s indexes flushed to %s', len(indexes), settings.INDEX_FILE)
+    if counter.nchanged:
+        with open(settings.INDEX_FILE, 'w', encoding='utf8') as f:
+            f.write('\n'.join(f'{k} {v}' for k, v in indexes.items()))
+            logger.info('%s indexes flushed to %s', len(indexes), settings.INDEX_FILE)
+    else:
+        logger.info('No index change detected.')
 
     if not args.git:
         return
