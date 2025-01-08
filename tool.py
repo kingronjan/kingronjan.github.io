@@ -260,7 +260,7 @@ class PostParser(object):
         if not rootpath.endswith(os.sep):
             rootpath += os.sep
 
-        self.dirpath = filepath.replace(rootpath, '')
+        self.dirpath = os.path.dirname(filepath).replace(rootpath, '')
         self.postid = None
         self.publish = False
         self.post = None
@@ -350,9 +350,8 @@ class PostParser(object):
         else:
             target_file = None
 
-        if not self.publish:
-            if target_file:
-                logger.info('remove published file: %s (cause publish disabled)', target_file)
+        if not self.publish and target_file:
+            logger.info('remove published file: %s (cause publish disabled)', target_file)
             os.remove(target_file)
             self.indexes.pop(self.postid)
             return True
@@ -466,8 +465,15 @@ def get_unstaged_files():
         file = file.strip()
         if not file or file.startswith('(use'):
             continue
-        opr, file = file.split(maxsplit=1)
-        logger.info('find unstaged file: %s %s', opr, file)
+
+        if file.startswith('Untracked files:'):
+            continue
+
+        logger.info('find unstaged file: %s', file)
+        try:
+            opr, file = file.split(maxsplit=1)
+        except ValueError:
+            pass
         files.append(file)
 
     logger.info('%s files found', len(files))
