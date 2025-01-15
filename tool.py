@@ -361,6 +361,7 @@ class PostParser(object):
             filename = self.get_filename()
             target_file = os.path.join(settings.POST_DIR, self.dirpath, prefix + filename)
 
+        os.makedirs(os.path.dirname(target_file), exist_ok=True)
         frontmatter.dump(self.post, target_file, encoding='utf-8')
         self.indexes[self.postid] = raw_digest + ' ' + target_file
         logger.debug('file %s synced to %s, id: %s', self.filepath, target_file, self.postid)
@@ -443,7 +444,8 @@ def sync_posts(args):
         if os.system('git commit -m "%s"' % args.message):
             failed = True
         else:
-            failed = False
+            break
+
         retried += 1
 
     if failed:
