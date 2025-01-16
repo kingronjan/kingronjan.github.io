@@ -8,6 +8,9 @@ layout: post
 tags:
 - database
 - oracle
+- ogg
+- goldengate
+- logminer
 title: OGG-01027 Troubleshooting
 ---
 
