@@ -19,9 +19,6 @@ try:
 except ImportError:
     raise FileExistsError('Settings file does not exists, create one like toolconf.py.template')
 
-
-logging.basicConfig(**settings.LOG)
-
 logger = logging.getLogger('tool')
 
 
@@ -329,6 +326,7 @@ class PostParser(object):
     def digest(self):
         with open(self.filepath, 'rb') as f:
             md5 = hashlib.md5()
+            md5.update(str(self.filepath).encode('utf8'))
             md5.update(f.read())
             return md5.hexdigest()
 
@@ -345,6 +343,8 @@ class PostParser(object):
 
             if digest and digest == raw_digest:
                 logger.debug('file %s no changes (digest: %s)', self.filepath, digest)
+                frontmatter.dump(self.post, self.filepath, encoding='utf-8')
+                logger.debug('file %s metadata flushed', self.filepath)
                 return False
 
         else:
@@ -356,15 +356,26 @@ class PostParser(object):
             self.indexes.pop(self.postid)
             return True
 
-        if not target_file:
-            prefix = self.post['date'].split()[0] + '-'
-            filename = self.get_filename()
-            target_file = os.path.join(settings.POST_DIR, self.dirpath, prefix + filename)
+        prefix = self.post['date'].split()[0] + '-'
+        filename = self.get_filename()
+        expect_target_file = os.path.join(str(settings.POST_DIR), str(self.dirpath), prefix + filename)
+
+        if target_file != expect_target_file:
+            logger.debug('file %s name changed to %s', target_file, expect_target_file)
+            os.remove(target_file)
+            target_file = expect_target_file
 
         os.makedirs(os.path.dirname(target_file), exist_ok=True)
         frontmatter.dump(self.post, target_file, encoding='utf-8')
-        self.indexes[self.postid] = raw_digest + ' ' + target_file
+
+        relative_filepath = target_file.replace(str(settings.BASE_DIR), '')
+        relative_filepath = relative_filepath.strip(os.sep)
+        self.indexes[self.postid] = '%s %s' % (raw_digest, relative_filepath)
         logger.debug('file %s synced to %s, id: %s', self.filepath, target_file, self.postid)
+
+        frontmatter.dump(self.post, self.filepath, encoding='utf-8')
+        logger.debug('file %s metadata flushed', self.filepath)
+
         return True
 
     def get_filename(self):
@@ -502,7 +513,7 @@ def init_posts(args):
             if 'id' not in post:
                 post['id'] = str(uuid.uuid4())
 
-            target_file = os.path.join(target_path, re.sub(r'^\d{4}-\d{2}-\d{2}-', '', filename))
+            target_file = os.path.join(str(target_path), re.sub(r'^\d{4}-\d{2}-\d{2}-', '', filename))
             frontmatter.dump(post, target_file, encoding='utf8')
             logger.info('file %s successfully write to %s, id: %s', filepath, target_file, post['id'])
             indexes.append('%s %s' % (post['id'], filepath))
@@ -519,6 +530,8 @@ def main():
     parser.add_argument('-d --dir-path', dest='dir_path', default='_posts', help='which dir for place the new post')
     parser.add_argument('-f --file', dest='file', default=None,
                         help="if specified, will read the file's content as post content")
+    parser.add_argument('-l --level', dest='level', default=None,
+                        help="log level")
     
     subparser = parser.add_subparsers(dest='subcmd')
     asset_parser = subparser.add_parser('assets')
@@ -540,6 +553,11 @@ def main():
     sync.set_defaults(func=sync_posts)
 
     args = parser.parse_args()
+
+    logconf = settings.LOG.copy()
+    if args.level:
+        logconf.update({'level': args.level})
+    logging.basicConfig(**logconf)
 
     if args.subcmd:
         args.func(args)
