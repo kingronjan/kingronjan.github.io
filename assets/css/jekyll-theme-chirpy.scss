@@ -10,11 +10,11 @@
 /* append your custom style below */
 
 html[data-mode=light] {
-    --h5-link-color: rgb(230 141 0);
+    --h5-link-color: rgb(11 109 154);
 }
 
 html:not([data-mode]), html[data-mode=dark] {
-    --h5-link-color: rgb(202 154 78);
+    --h5-link-color: rgb(61 160 213);
 }
 
 h5 {
@@ -26,8 +26,12 @@ h5 a {
     color: var(--h5-link-color);
 }
 
+h5 a:hover {
+    color: var(--h5-link-color);
+}
+
 h5 span:first-child a:first-child::before {
-    content: "🍕";
+    content: "🐋";
     margin-right: 4px;
 }
 
