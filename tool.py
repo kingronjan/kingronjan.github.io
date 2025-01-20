@@ -360,7 +360,9 @@ class PostParser(object):
         filename = self.get_filename()
         expect_target_file = os.path.join(str(settings.POST_DIR), str(self.dirpath), prefix + filename)
 
-        if target_file != expect_target_file:
+        if not target_file:
+            target_file = expect_target_file
+        elif target_file != expect_target_file:
             logger.debug('file %s name changed to %s', target_file, expect_target_file)
             os.remove(target_file)
             target_file = expect_target_file
