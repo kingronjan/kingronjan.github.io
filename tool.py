@@ -469,10 +469,12 @@ def sync_posts(args):
 
 def get_unstaged_files():
     logger.info('Fetching changed files...')
-    result = subprocess.check_output('git status', shell=True, text=True)
-    result = re.search(r'Changes not staged for commit:\n(.*?)(no changes|$)', result, re.S)
+    status_output = subprocess.check_output('git status', shell=True, text=True)
+    result = re.search(r'Changes not staged for commit:\n(.*?)(no changes|$)', status_output, re.S)
     if not result:
-        return logger.info('No changes added to commit')
+        result = re.search(r'Untracked files:\s*(.*?)(nothing added to commit|$)', status_output, re.S)
+        if not result:
+            return logger.info('No changes added to commit')
 
     result = result.groups()[0]
     files = []
