@@ -6,10 +6,12 @@ id: ede9614f-88ef-449e-9541-61eacbf42e34
 layout: post
 tags:
 - linux
+- expect
+- ssh
 title: 使用 expect 实现自动 ssh 登陆
 ---
 
-简单实现：
+### 简单实现
 
 ```shell
 #!/bin/bash
@@ -25,6 +27,8 @@ interact
 `expect` 会在  `interact` 的地方把终端的控制权交给用户。
 
 
+
+### 暂停、输入、继续 expect
 
 如果中途需要停下来，手动输入密码，然后继续后面的步骤，比如二次验证的密码等，可以使用：
 
@@ -70,5 +74,28 @@ set output $expect_out(1,string)
 puts "Result : $output"
 '
 ```
+
+
+
+### 使用 expect 而不是 bash
+
+上面的脚本都是用 `#!/bin/bash` 作为执行文件，实际上也可以指定 `expect` 作为执行文件，通常为 `#!/usr/bin/expect`，例如：
+
+```shell
+#!/usr/bin/expect
+
+# 可以使用 exec 执行 bash 命令
+exec source env.sh
+
+spawn ssh user@domain
+expect "assword:"
+send -- "mypasswordhere\n"
+
+interact
+```
+
+这样做的好处是不用把所有命令都写到 `expect -c ` 所指定的单引号范围内了，尤其是在命令本身包含单引号时，这样可以避免很多麻烦的转义。
+
+
 
 参考：[tcl - Expect: extract specific string from output - Stack Overflow](https://stackoverflow.com/questions/27089739/expect-extract-specific-string-from-output)

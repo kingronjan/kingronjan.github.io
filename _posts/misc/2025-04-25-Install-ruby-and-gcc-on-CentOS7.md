@@ -6,6 +6,11 @@ id: 67d135a9-ac7b-4bee-bce4-3b234e2a80a2
 layout: post
 tags:
 - misc
+- ruby
+- gcc
+- linux
+- centos
+- docker
 title: Install ruby and gcc on CentOS7
 ---
 
