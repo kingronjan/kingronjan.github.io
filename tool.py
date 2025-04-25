@@ -358,6 +358,7 @@ class PostParser(object):
 
         prefix = self.post['date'].split()[0] + '-'
         filename = self.get_filename()
+        breakpoint()
         expect_target_file = os.path.join(str(settings.POST_DIR), str(self.dirpath), prefix + filename)
 
         if not target_file:
