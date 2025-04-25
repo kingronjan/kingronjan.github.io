@@ -112,3 +112,24 @@ case = Case(*when, default=Value(3))
 
 MyModel.objects.annotate(order_status=case).order_by('order_status')
 ```
+
+
+
+#### 6. DISTINCT
+
+```python
+MyModel.objects.order_by().values('distinct_field').distinct()
+```
+
+**Note:** `order_by()` 的作用在于，如果模型中有定义默认的排序字段，如：
+
+```python
+class MyModel(models.Model):
+    ...
+    class Meta:
+        ordering = ['-id']
+```
+
+那么不加 `order_by()`，Django 会把 `ordering` 中的 `id` 字段也作为 `distinct` 的字段之一，为了保证 `distinct` 的字段只有传入的字段，需要使用 `order_by()` 清除排序的字段。
+
+**See also: ** [QuerySet API reference \| Django documentation \| Django](https://docs.djangoproject.com/en/dev/ref/models/querysets/#order-by)

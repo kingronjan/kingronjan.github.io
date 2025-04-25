@@ -29,3 +29,6 @@ assets/js/dist
 toolconf.py
 .postindexes
 *.pyc
+
+# debug
+x
