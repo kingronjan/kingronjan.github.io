@@ -44,6 +44,7 @@ from kafka import KafkaAdminClient, KafkaConsumer, KafkaProducer, TopicPartition
 
 
 topic = 'mystopic'
+# 最多消费的数量
 max_consume_num = 5
 
 c = KafkaConsumer(
