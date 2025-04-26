@@ -257,7 +257,11 @@ class PostParser(object):
         if not rootpath.endswith(os.sep):
             rootpath += os.sep
 
-        self.dirpath = os.path.dirname(filepath).replace(rootpath, '')
+        relative_path = filepath.split(rootpath, maxsplit=1)[-1]
+        relative_path = relative_path.strip(os.sep)
+        self.dirpath, _ = os.path.split(relative_path)
+
+        # self.dirpath = os.path.dirname(filepath).replace(rootpath, '')
         self.postid = None
         self.publish = False
         self.post = None
@@ -358,7 +362,6 @@ class PostParser(object):
 
         prefix = self.post['date'].split()[0] + '-'
         filename = self.get_filename()
-        breakpoint()
         expect_target_file = os.path.join(str(settings.POST_DIR), str(self.dirpath), prefix + filename)
 
         if not target_file:
