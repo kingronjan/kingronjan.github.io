@@ -208,3 +208,9 @@ create table article (
 ```
 
 字段 `expired` 的默认值变为了 `null`，所以我们也可以通过 `show create table` 语句确认相关字段是否有默认值（即使可为 `NULL`），以及是否需要在 `strict mode` 下显式的指定该字段的值。
+
+需要注意的是，对于 `BLOB, TEXT, GEOMETRY or JSON` 类型的字段是无法设置默认值的，会得到下面的错误：
+
+```
+ERROR 1101 (42000): BLOB, TEXT, GEOMETRY or JSON column 'tt' can't have a default value
+```
