@@ -14,7 +14,7 @@ title: Strict SQL Mode 对 INSERT 的影响
 
 ### 从 django 迁移说起
 
-有一次我需要为开发的 django 项目某张表增加一个字段，大概定义如下：
+有次我需要为开发的 django 项目某张表增加一个字段，大概定义如下：
 
 ```python
 class Article(models.Model):
@@ -125,7 +125,7 @@ A：
 
 ### Strict SQL Mode
 
-我在 MySQL 文档里面了解到了 [`STRICT_TRANS_TABLES`](https://dev.mysql.com/doc/refman/8.4/en/sql-mode.html#sqlmode_strict_trans_tables) 带来了哪些影响：
+MySQL 文档里面提到了 [`STRICT_TRANS_TABLES`](https://dev.mysql.com/doc/refman/8.4/en/sql-mode.html#sqlmode_strict_trans_tables) 带来了哪些影响：
 
 > Enable strict SQL mode for transactional storage engines, and when possible for nontransactional storage engines. 
 >
@@ -142,67 +142,69 @@ A：
 
 最后总结下如何避免这种情况的发生：
 
-- 数据库与版本环境分离
 
-  当然，如果新版本使用表结构迁移操作时使用与之前不同的数据库就不会出现这个问题了。
 
-  
+#### 数据库与版本环境分离
 
-- 改变 `sql_mode` 配置
+当然，如果新版本使用表结构迁移操作时使用与之前不同的数据库就不会出现这个问题了。
 
-  从 `sql_mode` 中移除 `STRICT_TRANS_TABLES` 也可以有效的解决这种问题，但是可能会带来一些意想不到的行为，比如，对于明确使用   `NOT NULL` 定义的字段，`INSERT` 时不指定也不会报错：
 
-  ```sql
-  CREATE TABLE t (i INT NOT NULL);
-  
-  INSERT INTO t VALUES();  -- It's ok!
-  ```
 
-  
+#### 改变 `sql_mode` 配置
 
-- 使用 `INSERT IGNORE`
+从 `sql_mode` 中移除 `STRICT_TRANS_TABLES` 也可以有效的解决这种问题，但是可能会带来一些意想不到的行为，比如，对于明确使用   `NOT NULL` 定义的字段，`INSERT` 时不指定也不会报错：
 
-  使用 `INSERT IGNORE` 同样可以让 MySQL 不抛出异常，带来的其他影响可以参考：[Comparison of the IGNORE Keyword and Strict SQL Mode](https://dev.mysql.com/doc/refman/8.4/en/sql-mode.html#ignore-strict-comparison)
+```sql
+CREATE TABLE t (i INT NOT NULL);
 
-  
+INSERT INTO t VALUES();  -- It's ok!
+```
 
-- 使用 `db_default` 参数（django 5.0+）
 
-  我找到了一篇 django 社区[对于在数据库层面保留默认值问题的讨论](https://code.djangoproject.com/ticket/28000)，同时也讨论了保留的可能，最终在 5.0 版本支持保留数据库的默认值，而不是在添加后又 `drop default`， 如果你使用的是 5.0+ 的版本，可以在定义时使用 `db_default` 参数而不是 `default`：
 
-  ```python
-  class Article(models.Model):
-      
-      # 新增字段
-      expired = models.IntegerField(null=True, db_default=0)
-  ```
+#### 使用 `INSERT IGNORE`
 
-  
+使用 `INSERT IGNORE` 同样可以让 MySQL 不抛出异常，带来的其他影响可以参考：[Comparison of the IGNORE Keyword and Strict SQL Mode](https://dev.mysql.com/doc/refman/8.4/en/sql-mode.html#ignore-strict-comparison)
 
-- 修改字段可为 `NULL`
 
-  很奇怪，是不是？我不是已经定义字段可为 `NULL` 了吗？django 显然没有把 `null` 这个定义也 drop 掉，但是，当我再次使用下面的 SQL 更新字段定义后，再次写入就不会报错：
 
-  ```sql
-  alter table article modify column expired int null;
-  ```
+#### 使用 `db_default` 参数（django 5.0+）
 
-  至于原因，我们可以通过 `show create table article` 窥见一二，在执行 `modify` 语句之前，我通过 `show create table article` 查看当前的表的定义如下：
+我找到了一篇 django 社区[对于在数据库层面保留默认值问题的讨论](https://code.djangoproject.com/ticket/28000)，同时也讨论了保留的可能，最终在 5.0 版本支持保留数据库的默认值，而不是在添加后又 `drop default`， 如果你使用的是 5.0+ 的版本，可以在定义时使用 `db_default` 参数而不是 `default`：
 
-  ```sql
-  create table article (
-  	...
-      expired int
-  )
-  ```
+```python
+class Article(models.Model):
+    
+    # 新增字段
+    expired = models.IntegerField(null=True, db_default=0)
+```
 
-  字段 `expired` 后面没有 `NOT NULL`，说明默认就是 `NULL`，但是当我执行 `modify` 语句后，定义变成了：
 
-  ```sql
-  create table article (
-  	...
-      expired int default null
-  )
-  ```
 
-  字段 `expired` 的默认值变为了 `null`，所以我们也可以通过 `show create table` 语句确认相关字段是否有默认值（即使可为 `NULL`），以及是否需要在 `strict mode` 下显式的指定该字段的值。
+#### 修改字段可为 `NULL`
+
+很奇怪，是不是？我不是已经定义字段可为 `NULL` 了吗？django 显然没有把 `null` 这个定义也 drop 掉，但是，当我再次使用下面的 SQL 更新字段定义后，再次写入就不会报错：
+
+```sql
+alter table article modify column expired int null;
+```
+
+至于原因，我们可以通过 `show create table article` 窥见一二，在执行 `modify` 语句之前，我通过 `show create table article` 查看当前的表的定义如下：
+
+```sql
+create table article (
+	...
+    expired int
+)
+```
+
+字段 `expired` 后面没有 `NOT NULL`，说明默认就是 `NULL`，但是当我执行 `modify` 语句后，定义变成了：
+
+```sql
+create table article (
+	...
+    expired int default null
+)
+```
+
+字段 `expired` 的默认值变为了 `null`，所以我们也可以通过 `show create table` 语句确认相关字段是否有默认值（即使可为 `NULL`），以及是否需要在 `strict mode` 下显式的指定该字段的值。
