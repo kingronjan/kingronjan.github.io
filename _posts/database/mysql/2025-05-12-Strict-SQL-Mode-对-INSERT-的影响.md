@@ -164,9 +164,11 @@ A：
 
   使用 `INSERT IGNORE` 同样可以让 MySQL 不抛出异常，带来的其他影响可以参考：[Comparison of the IGNORE Keyword and Strict SQL Mode](https://dev.mysql.com/doc/refman/8.4/en/sql-mode.html#ignore-strict-comparison)
 
+  
+
 - 使用 `db_default` 参数（django 5.0+）
 
-  我找到了一篇 django 社区[对于在数据库层面保留默认值问题的讨论](https://code.djangoproject.com/ticket/28000)，同时也讨论了保留的可能，最终在 5.0 版本支持保留数据库的默认值，而不是在添加后又 `drop default`， 如果你使用的是 5.0+ 的版本，可以在定义时使用 `db_default` 参数：
+  我找到了一篇 django 社区[对于在数据库层面保留默认值问题的讨论](https://code.djangoproject.com/ticket/28000)，同时也讨论了保留的可能，最终在 5.0 版本支持保留数据库的默认值，而不是在添加后又 `drop default`， 如果你使用的是 5.0+ 的版本，可以在定义时使用 `db_default` 参数而不是 `default`：
 
   ```python
   class Article(models.Model):
@@ -185,7 +187,7 @@ A：
   alter table article modify column expired int null;
   ```
 
-  至于原因，我们可以通过 `show create table article` 窥见一二，在执行 ` modify` 语句之前，我通过 `show create table article` 查看当前的表的定义如下：
+  至于原因，我们可以通过 `show create table article` 窥见一二，在执行 `modify` 语句之前，我通过 `show create table article` 查看当前的表的定义如下：
 
   ```sql
   create table article (
