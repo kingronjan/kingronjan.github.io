@@ -2,6 +2,7 @@
 categories:
 - database
 - mysql
+- django
 date: 2025-05-12 16:15 +0800
 id: da2976e1-4903-4f33-80b9-5b3c3b965966
 layout: post
