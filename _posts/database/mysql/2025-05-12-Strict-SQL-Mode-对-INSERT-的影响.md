@@ -2,13 +2,13 @@
 categories:
 - database
 - mysql
-- django
 date: 2025-05-12 16:15 +0800
 id: da2976e1-4903-4f33-80b9-5b3c3b965966
 layout: post
 tags:
 - database
 - mysql
+- django
 title: Strict SQL Mode 对 INSERT 的影响
 ---
 
@@ -140,17 +140,17 @@ MySQL 文档里面提到了 [`STRICT_TRANS_TABLES`](https://dev.mysql.com/doc/re
 
 ### 如何避免
 
-最后总结下如何避免这种情况的发生：
+最后总结下如何避免这种情况的发生，有几种方式：
 
 
 
-#### 数据库与版本环境分离
+#### 1. 数据库与版本环境分离
 
 当然，如果新版本使用表结构迁移操作时使用与之前不同的数据库就不会出现这个问题了。
 
 
 
-#### 改变 `sql_mode` 配置
+#### 2. 改变 `sql_mode` 配置
 
 从 `sql_mode` 中移除 `STRICT_TRANS_TABLES` 也可以有效的解决这种问题，但是可能会带来一些意想不到的行为，比如，对于明确使用   `NOT NULL` 定义的字段，`INSERT` 时不指定也不会报错：
 
@@ -162,13 +162,13 @@ INSERT INTO t VALUES();  -- It's ok!
 
 
 
-#### 使用 `INSERT IGNORE`
+#### 3. 使用 `INSERT IGNORE`
 
 使用 `INSERT IGNORE` 同样可以让 MySQL 不抛出异常，带来的其他影响可以参考：[Comparison of the IGNORE Keyword and Strict SQL Mode](https://dev.mysql.com/doc/refman/8.4/en/sql-mode.html#ignore-strict-comparison)
 
 
 
-#### 使用 `db_default` 参数（django 5.0+）
+#### 4. 使用 `db_default` 参数（django 5.0+）
 
 我找到了一篇 django 社区[对于在数据库层面保留默认值问题的讨论](https://code.djangoproject.com/ticket/28000)，同时也讨论了保留的可能，最终在 5.0 版本支持保留数据库的默认值，而不是在添加后又 `drop default`， 如果你使用的是 5.0+ 的版本，可以在定义时使用 `db_default` 参数而不是 `default`：
 
@@ -181,7 +181,7 @@ class Article(models.Model):
 
 
 
-#### 修改字段可为 `NULL`
+#### 5. 修改字段可为 `NULL`
 
 很奇怪，是不是？我不是已经定义字段可为 `NULL` 了吗？django 显然没有把 `null` 这个定义也 drop 掉，但是，当我再次使用下面的 SQL 更新字段定义后，再次写入就不会报错：
 
@@ -214,3 +214,5 @@ create table article (
 ```
 ERROR 1101 (42000): BLOB, TEXT, GEOMETRY or JSON column 'tt' can't have a default value
 ```
+
+对于这种情况只有寻求其他的解决方式了。
