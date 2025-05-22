@@ -18,7 +18,7 @@ debezium server 很早就推出来了，但是网上看到使用的分享资料�
 - 通过 rest api 创建、启动、修改、删除
 - 故障转移
 - 资源动态伸缩
-- 其他可参考：[The debezium trio: Comparing kafka connect, Server, and Engin run times](https://blog.sequinstream.com/the-debezium-trio-comparing-kafka-connect-server-and-engine-run-times/)
+- 更多特性，可参考：[The debezium trio: Comparing kafka connect, Server, and Engin run times](https://blog.sequinstream.com/the-debezium-trio-comparing-kafka-connect-server-and-engine-run-times/)
 
 因此使用场景比较少，但是在某些情况下使用仍然很有用，比如：
 
@@ -86,6 +86,7 @@ debezium-server/
         </dependency>
     </dependencies>
 
+    <!-- 用于将 debzium-storage-jdbc 打包到 lib 目录下 -->
     <build>
         <plugins>
             <plugin>
@@ -216,7 +217,7 @@ CREATE TABLE offset_db.debezium_schema_history (
 
 schema.history 表：
 ```sql
-mysql> select * from offset_db.debezium_schema_history limit 1\g
+mysql> select * from offset_db.debezium_schema_history limit 1\G
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   field               value
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -232,7 +233,7 @@ mysql> select * from offset_db.debezium_schema_history limit 1\g
 
 位点表：
 ```sql
-mysql> select * from offset_db.debezium_offset_storage limit 1\g
+mysql> select * from offset_db.debezium_offset_storage limit 1\G
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   field               value
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
