@@ -11,53 +11,45 @@ tags:
 title: 关于 celery worker 重复执行相同 id 任务的问题
 ---
 
-### 现象
+### Visibility timeout
 
-查看 celery 日志发现有的任务被重复的接收和执行了：
+If a task isn’t acknowledged within the [Visibility Timeout](https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html#redis-visibility-timeout) the task will be redelivered to another worker and executed.
+
+This causes problems with ETA/countdown/retry tasks where the time to execute exceeds the visibility timeout; in fact if that happens it will be executed again, and again in a loop.
+
+To remediate that, you can increase the visibility timeout to match the time of the longest ETA you’re planning to use. However, this is not recommended as it may have negative impact on the reliability. Celery will redeliver messages at worker shutdown, so having a long visibility timeout will only delay the redelivery of ‘lost’ tasks in the event of a power failure or forcefully terminated workers.
+
+Broker is not a database, so if you are in need of scheduling tasks for a more distant future, database-backed periodic task might be a better choice. Periodic tasks won’t be affected by the visibility timeout, as this is a concept separate from ETA/countdown.
+
+You can increase this timeout by configuring all of the following options with the same name (required to set all of them):
 
 ```
-[2025-05-23 17:47:19,386: INFO/MainProcess] Task myapp.hello[1c464ff7-ee5f-4a27-943b-0854eeab3083] received
-[2025-05-23 17:47:19,907: INFO/MainProcess] Task myapp.hello[9bf3bb88-e2cd-4ece-ba07-feb9f7a4f0fd] received
-[2025-05-23 17:47:22,819: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:47:22,821: INFO/MainProcess] Task myapp.hello[7bd1e485-6083-4def-81d7-653848db99f3] received
-[2025-05-23 17:47:27,828: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:47:27,830: INFO/MainProcess] Task myapp.hello[ffeb9b07-c623-419e-98d8-f8a55f148536] received
-[2025-05-23 17:47:32,836: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:47:32,838: INFO/MainProcess] Task myapp.hello[1c464ff7-ee5f-4a27-943b-0854eeab3083] received
-[2025-05-23 17:47:37,844: INFO/ForkPoolWorker-1] Task myapp.hello[1c464ff7-ee5f-4a27-943b-0854eeab3083] succeeded in 5.008163110000169s: 'hello world'
-[2025-05-23 17:47:37,845: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:47:37,847: INFO/MainProcess] Task myapp.hello[9bf3bb88-e2cd-4ece-ba07-feb9f7a4f0fd] received
-[2025-05-23 17:47:42,854: INFO/ForkPoolWorker-1] Task myapp.hello[9bf3bb88-e2cd-4ece-ba07-feb9f7a4f0fd] succeeded in 5.008809007000309s: 'hello world'
-[2025-05-23 17:47:42,855: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:47:42,858: INFO/MainProcess] Task myapp.hello[7bd1e485-6083-4def-81d7-653848db99f3] received
-[2025-05-23 17:47:47,863: INFO/ForkPoolWorker-1] Task myapp.hello[7bd1e485-6083-4def-81d7-653848db99f3] succeeded in 5.008066221999798s: 'hello world'
-[2025-05-23 17:47:47,864: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:47:47,866: INFO/MainProcess] Task myapp.hello[ffeb9b07-c623-419e-98d8-f8a55f148536] received
-[2025-05-23 17:47:52,872: INFO/ForkPoolWorker-1] Task myapp.hello[ffeb9b07-c623-419e-98d8-f8a55f148536] succeeded in 5.007953701999213s: 'hello world'
-[2025-05-23 17:47:52,873: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:47:52,875: INFO/MainProcess] Task myapp.hello[4d187035-d76c-443f-b592-0fe5fd7dbe41] received
-[2025-05-23 17:47:57,880: INFO/ForkPoolWorker-1] Task myapp.hello[1c464ff7-ee5f-4a27-943b-0854eeab3083] succeeded in 5.007223296999655s: 'hello world'
-[2025-05-23 17:47:57,882: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:47:57,884: INFO/MainProcess] Task myapp.hello[36f1bacb-d03b-4f9b-b94f-e51b2789830c] received
-[2025-05-23 17:48:02,888: INFO/ForkPoolWorker-1] Task myapp.hello[9bf3bb88-e2cd-4ece-ba07-feb9f7a4f0fd] succeeded in 5.00692129700019s: 'hello world'
-[2025-05-23 17:48:02,889: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:48:02,892: INFO/MainProcess] Task myapp.hello[792671c4-c53b-4866-b307-cea92d43d6f7] received
-[2025-05-23 17:48:07,897: INFO/ForkPoolWorker-1] Task myapp.hello[7bd1e485-6083-4def-81d7-653848db99f3] succeeded in 5.007225551000374s: 'hello world'
-[2025-05-23 17:48:07,898: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:48:12,905: INFO/ForkPoolWorker-1] Task myapp.hello[ffeb9b07-c623-419e-98d8-f8a55f148536] succeeded in 5.007138986000427s: 'hello world'
-[2025-05-23 17:48:12,906: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:48:17,914: INFO/ForkPoolWorker-1] Task myapp.hello[4d187035-d76c-443f-b592-0fe5fd7dbe41] succeeded in 5.00834930200017s: 'hello world'
-[2025-05-23 17:48:17,915: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:48:22,923: INFO/ForkPoolWorker-1] Task myapp.hello[36f1bacb-d03b-4f9b-b94f-e51b2789830c] succeeded in 5.0081579010002315s: 'hello world'
-[2025-05-23 17:48:22,925: WARNING/ForkPoolWorker-1] waitting
-[2025-05-23 17:48:27,932: INFO/ForkPoolWorker-1] Task myapp.hello[792671c4-c53b-4866-b307-cea92d43d6f7] succeeded in 5.007721992999905s: 'hello world'
+app.conf.broker_transport_options = {'visibility_timeout': 43200}
+app.conf.result_backend_transport_options = {'visibility_timeout': 43200}
+app.conf.visibility_timeout = 43200
 ```
 
+The value must be an int describing the number of seconds.
+
+Note: If multiple applications are sharing the same Broker, with different settings, the _shortest_ value will be used. This include if the value is not set, and the default is sent
+
+### Prefetch Limits
+
+*Prefetch* is a term inherited from AMQP that’s often misunderstood by users.
+
+The prefetch limit is a **limit** for the number of tasks (messages) a worker can reserve for itself. If it is zero, the worker will keep consuming messages, not respecting that there may be other available worker nodes that may be able to process them sooner [[†\]](https://docs.celeryq.dev/en/stable/userguide/optimizing.html#id5), or that the messages may not even fit in memory.
+
+The workers’ default prefetch count is the [`worker_prefetch_multiplier`](https://docs.celeryq.dev/en/stable/userguide/configuration.html#std-setting-worker_prefetch_multiplier) setting multiplied by the number of concurrency slots [[‡\]](https://docs.celeryq.dev/en/stable/userguide/optimizing.html#id6) (processes/threads/green-threads).
+
+If you have many tasks with a long duration you want the multiplier value to be *one*: meaning it’ll only reserve one task per worker process at a time.
+
+However – If you have many short-running tasks, and throughput/round trip latency is important to you, this number should be large. The worker is able to process more tasks per second if the messages have already been prefetched, and is available in memory. You may have to experiment to find the best value that works for you. Values like 50 or 150 might make sense in these circumstances. Say 64, or 128.
+
+If you have a combination of long- and short-running tasks, the best option is to use two worker nodes that are configured separately, and route the tasks according to the run-time (see [Routing Tasks](https://docs.celeryq.dev/en/stable/userguide/routing.html#guide-routing)).
 
 
 
-
-### 参考
+### Reference
 
 1. [Using Redis — Celery 5.5.2 documentation](https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html#id3)
 2. [Optimizing — Celery 5.5.2 documentation](https://docs.celeryq.dev/en/stable/userguide/optimizing.html#prefetch-limits)
