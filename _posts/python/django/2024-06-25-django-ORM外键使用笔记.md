@@ -180,8 +180,12 @@ CREATE INDEX "fk_city_province_id_8eb2bf6f" ON "fk_city" ("province_id");
 COMMIT;
 ```
 
+
+
 > 对于 AlterField 操作，不同的数据库可能会有不同的 SQL 产生，这里使用的是 sqllite
-> {: .prompt-info }
+{: .prompt-info }
+
+
 
 这样操作后，再次执行 `makemigrations` 命令，django 也不会产生新的 migrations 文件。
 
