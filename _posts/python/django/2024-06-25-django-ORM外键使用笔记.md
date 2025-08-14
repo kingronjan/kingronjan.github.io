@@ -257,39 +257,94 @@ qs = City.objects.select_related('province')
 
 当外键 `province` `null=True` 时，产生的 SQL 使用了 `LEFT JOIN`：
 
-```sql
->>> print(qs.query)
-SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_province"."id", "fk_province"."name" FROM "fk_city" LEFT OUTER JOIN "fk_province" ON ("fk_city"."province_id" = "fk_province"."id")
+```python
+>>> print_queryset_sql(qs)
+select "fk_city"."id",
+       "fk_city"."name",
+       "fk_city"."province_id",
+       "fk_province"."id",
+       "fk_province"."name"
+from   "fk_city" left
+    outer join "fk_province"
+        on ("fk_city"."province_id" = "fk_province"."id")
 ```
+
+
+
+> 这里查看 Queryset 的查询 SQL 方法定义如下：
+> ```python
+> from sql_formatter.core import format_sql
+> 
+> def print_queryset_sql(qs):
+> 	print(format_sql(str(qs.query)).lower())	
+> ```
+{: .prompt-info }
+
+
 
 而当 `null=False` 时，产生的 SQL 则使用了 `INNER JOIN`：
 
 ```python
->>> print(qs.query)
-SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_province"."id", "fk_province"."name" FROM "fk_city" INNER JOIN "fk_province" ON ("fk_city"."province_id" = "fk_province"."id")
+>>> print_queryset_sql(qs)
+select "fk_city"."id",
+       "fk_city"."name",
+       "fk_city"."province_id",
+       "fk_province"."id",
+       "fk_province"."name"
+from   "fk_city" 
+    inner join "fk_province"
+        on ("fk_city"."province_id" = "fk_province"."id")
 ```
 
 如上文，如果外键中刚好存在值为 `0` 的数据，而且需要检索该类数据时，使用过滤时 django 仍会转为 `INNER JOIN` 的方式，因为 django 任务既然已经为该字段提供了值，必然不会再需要用 `LEFT JOIN` 来考虑字段为空的情况，因此使用性能更好的 `INNER JOIN`：
 
 ```python
->>> print(qs.filter(province_id=0).query)
-SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_province"."id", "fk_province"."name" FROM "fk_city" INNER JOIN "fk_province" ON ("fk_city"."province_id" = "fk_province"."id") WHERE "fk_city"."province_id" = 0
+>>> print_queryset_sql(qs.filter(province_id=0))
+select "fk_city"."id",
+       "fk_city"."name",
+       "fk_city"."province_id",
+       "fk_province"."id",
+       "fk_province"."name"
+from   "fk_city"
+    inner join "fk_province"
+        on ("fk_city"."province_id" = "fk_province"."id")
+where  "fk_city"."province_id" = 0
 ```
 
 为了能够检索出该类数据，需要提供额外的筛选条件，让 django 考虑到可能会为 `null ` 的情况：
 
 ````python
 >>> from django.db.models import Q
->>> print(qs.filter(Q(province_id=0) | Q(province_id__isnull=True)).query)
-SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_province"."id", "fk_province"."name" FROM "fk_city" LEFT OUTER JOIN "fk_province" ON ("fk_city"."province_id" = "fk_province"."id") WHERE ("fk_city"."province_id" = 0 OR "fk_city"."province_id" IS NULL)
+>>>
+>>> print_queryset_sql(qs.filter(Q(province_id=0) | Q(province_id__isnull=True)))
+select "fk_city"."id",
+       "fk_city"."name",
+       "fk_city"."province_id",
+       "fk_province"."id",
+       "fk_province"."name"
+from   "fk_city" left
+    outer join "fk_province"
+        on ("fk_city"."province_id" = "fk_province"."id")
+where  ("fk_city"."province_id" = 0
+    or "fk_city"."province_id" is null)
 ````
 
 但是这样会筛选出 `province_id` 值为 `null` 的数据，需要额外处理。因此还有一种更好的方式，使用 `annotate` ：
 
 ```python
 >>> from django.db.models import F
->>> print(qs.annotate(pid=F('province_id')).filter(pid=0).query)
-SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_city"."province_id" AS "pid", "fk_province"."id", "fk_province"."name" FROM "fk_city" LEFT OUTER JOIN "fk_province" ON ("fk_city"."province_id" = "fk_province"."id") WHERE "fk_city"."province_id" = 0
+>>>
+>>> print_queryset_sql(qs.annotate(pid=F('province_id')).filter(pid=0))
+select "fk_city"."id",
+       "fk_city"."name",
+       "fk_city"."province_id",
+       "fk_city"."province_id" as "pid",
+       "fk_province"."id",
+       "fk_province"."name"
+from   "fk_city" left
+    outer join "fk_province"
+        on ("fk_city"."province_id" = "fk_province"."id")
+where  "fk_city"."province_id" = 0
 ```
 
 
