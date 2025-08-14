@@ -37,6 +37,29 @@ class City(models.Model):
 
 
 
+如果使用的是 MySQL 等约定自增字段值不能为 `0` 的数据库类型，这种做法无法为 `province_id` 写入值为 `0` 的数据，当然，实际上数据库是允许的，当时 django 为此做了限制，为此可以自定义一个外键类型，然后去掉检查即可，比如下面是针对值为 `0` 时，允许写入的改造：
+
+
+
+```python
+from django.db import models
+
+class ZeroableForeignKey(models.ForeignKey):
+    
+    def get_db_prep_save(self, value, connection):
+        if value == 0:
+            return value
+        return super().get_db_prep_save(value, connection)
+
+    
+# in models.py
+class City(...):
+    ...
+    province = ZeroableForeignKey(Province, null=True, on_delete=models.DO_NOTHING, related_name='cities', db_constraint=False)   
+```
+
+
+
 ### 将整形字段改为逻辑外键
 
 有时候处于某些原因，我们没有使用外键，而是用了一个 integer 字段，视为外键。比如：
@@ -82,12 +105,10 @@ City.objects.annotate(province_name=Subquery(Province.objects.filter(id=OuterRef
 ```python
 from django.db import models
 
-
-class Province(models.Model):
-    name = models.CharField(max_length=16)
+...
 
 class City(models.Model):
-    name = models.CharField(max_length=16)
+    ...
     province = models.ForeignKey(Province, null=True, on_delete=models.DO_NOTHING, related_name='cities', db_constraint=False)
 ```
 
@@ -120,7 +141,42 @@ COMMIT;
 
 竟然要删除字段，再重新添加，如果字段之前已经保存了很多数据，这样做可是非常危险的。
 
-显然 django 认为 `province_id` 和 `province` 并不一致，为了达到目的，可以略微修改下 migrations 文件:
+显然 django 认为 `province_id` 和 `province` 并不一致，为了达到目的，可以略微修改下 migrations 文件。
+
+修改时分为两种方式，一种方法是找到该字段最后一次更新的 migrations 文件，然后直接修改为 `ForeignKey` 即可，这样不会产生任何额外的迁移文件，也不会有 DDL 变更；第二种方式还是在新产生的 migrations 文件中修改，但是会产生 DDL 变更。
+
+先讲第一种方式，找到 province_id 字段最后一次更新的 migrations 文件，这里是 `0001_initial`，修改为：
+
+```python
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+    initial = True
+
+    dependencies = []
+
+    operations = [
+        migrations.CreateModel(
+            name="City",
+            fields=[
+                ...
+                # 直接修改为 ForeignKey
+                # ("province_id", models.IntegerField(null=True)),
+                ("province", models.ForeignKey(to="fk.province", null=True, on_delete=models.DO_NOTHING, related_name='cities', db_constraint=False)),
+            ],
+        ),
+        ...
+    ]
+```
+
+之后记得删除之前产生的迁移文件：
+
+```shell
+$ rm -f fk/migrations/0002_remove_city_province_id_city_province.py
+```
+
+第二种方式要繁琐一些，需要做两次字段重命名的操作：
 
 ```python
 from django.db import migrations, models
@@ -211,6 +267,29 @@ SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_province".
 ```python
 >>> print(qs.query)
 SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_province"."id", "fk_province"."name" FROM "fk_city" INNER JOIN "fk_province" ON ("fk_city"."province_id" = "fk_province"."id")
+```
+
+如上文，如果外键中刚好存在值为 `0` 的数据，而且需要检索该类数据时，使用过滤时 django 仍会转为 `INNER JOIN` 的方式，因为 django 任务既然已经为该字段提供了值，必然不会再需要用 `LEFT JOIN` 来考虑字段为空的情况，因此使用性能更好的 `INNER JOIN`：
+
+```python
+>>> print(qs.filter(province_id=0).query)
+SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_province"."id", "fk_province"."name" FROM "fk_city" INNER JOIN "fk_province" ON ("fk_city"."province_id" = "fk_province"."id") WHERE "fk_city"."province_id" = 0
+```
+
+为了能够检索出该类数据，需要提供额外的筛选条件，让 django 考虑到可能会为 `null ` 的情况：
+
+````python
+>>> from django.db.models import Q
+>>> print(qs.filter(Q(province_id=0) | Q(province_id__isnull=True)).query)
+SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_province"."id", "fk_province"."name" FROM "fk_city" LEFT OUTER JOIN "fk_province" ON ("fk_city"."province_id" = "fk_province"."id") WHERE ("fk_city"."province_id" = 0 OR "fk_city"."province_id" IS NULL)
+````
+
+但是这样会筛选出 `province_id` 值为 `null` 的数据，需要额外处理。因此还有一种更好的方式，使用 `annotate` ：
+
+```python
+>>> from django.db.models import F
+>>> print(qs.annotate(pid=F('province_id')).filter(pid=0).query)
+SELECT "fk_city"."id", "fk_city"."name", "fk_city"."province_id", "fk_city"."province_id" AS "pid", "fk_province"."id", "fk_province"."name" FROM "fk_city" LEFT OUTER JOIN "fk_province" ON ("fk_city"."province_id" = "fk_province"."id") WHERE "fk_city"."province_id" = 0
 ```
 
 
