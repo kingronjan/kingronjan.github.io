@@ -1,0 +1,275 @@
+---
+categories:
+- spider
+date: 2020-07-28 18:00 +0800
+layout: post
+tags: [scrapy, python, selenium]
+title: 在 scrapy 中实现浏览器池
+---
+
+# 1
+使用 `scrapy` 做采集实在是爽，但是遇到网站反爬措施做的比较好的就让人头大了。除了硬着头皮上以外，还可以使用爬虫利器 `selenium`，`selenium` 因其良好的模拟能力成为爬虫爱(cai)好(ji)者爱不释手的武器。但是其速度又往往令人感到美中不足，特别是在与 `scrapy` 集成使用时，严重拖了 `scrapy` 的后腿，整个采集过程让人看着实在不爽，那么有没有更好的方式来使用呢？答案当然是必须的。
+
+# 2
+`twisted` 开发者在遇到与 `MySQL` 数据库交互时，也有同样的问题：如何在异步循环中更好的调用一个IO阻塞的函数？于是他们实现了 `adbapi`，将阻塞方法放进了线程池中执行。基于此，我们也可以将 `selenium` 相关的方法放入线程池中执行，这样就可以极大的减少等待的时间。
+
+# 3
+由于 `scrapy` 是基于 `twisted` 开发的，因此基于 `twisted` 线程池实现 `selenium` 浏览器池，就能很好的与 `scrapy` 融合在一起了，所以本次就基于 `twisted` 的 `threadpool` 开发，手把手写一个下载中间件，用来实现 `scrapy` 与 `selenium` 的优雅配合。
+
+# 4
+首先是对于请求类的定义，我们让 `selenium` 只接受自定义的请求类调用，考虑到 `selenium` 中可等待，可执行 `JavaScript`，因此为其定义了 `wait_until`、`wait_time`、`script` 三个属性，同时考虑到可能会在请求成功后对 `webdriver` 做自定制的操作，因此还定义了一个 `handler` 属性，该属性接受一个方法，仅可接受 `driver`、`request`、`spider` 三个参数，分别表示当前浏览器实例、当前请求实例、当前爬虫实例，该方法可以有返回值，当该方法返回一个 `Request` 或 `Response` 对象时，与在 `scrapy` 中的下载中间中的 `process_request` 方法返回值具有同等作用：
+```py
+import scrapy
+
+class SeleniumRequest(scrapy.Request):
+
+    def __init__(self,
+                 url,
+                 callback=None,
+                 wait_until=None,
+                 wait_time=10,
+                 script=None,
+                 handler=None,
+                 **kwargs):
+        self.wait_until = wait_until
+        self.wait_time = wait_time
+        self.script = script
+        self.handler = handler
+        super().__init__(url, callback, **kwargs)
+```
+
+# 5
+定义好请求类后，还需要实现浏览器类，用于创建 `webdriver` 实例，同时做一些规避检测和简单优化的动作，并支持不同的浏览器，鉴于精力有限，这里仅支持 `chrome` 和 `firefox` 浏览器：
+```py
+from scrapy.http import HtmlResponse
+from selenium import webdriver
+from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
+
+
+class Browser(object):
+    """Browser to make drivers"""
+    # 支持的浏览器名称及对应的类
+    support_driver_map = {
+        'firefox': webdriver.Firefox,
+        'chrome': webdriver.Chrome
+    }
+
+    def __init__(self, driver_name='chrome', executable_path=None, options=None, **opt_kw):
+        assert driver_name in self.support_driver_map, f'{driver_name} not be supported!'
+        self.driver_name = driver_name
+        self.executable_path = executable_path
+        if options is not None:
+            self.options = options
+        else:
+            self.options = make_options(self.driver_name, **opt_kw)
+
+    def driver(self):
+        kwargs = {'executable_path': self.executable_path, 'options': self.options}
+        # 关闭日志文件，仅适用于windows平台
+        if self.driver_name == 'firefox':
+            kwargs['service_log_path'] = 'nul'
+        driver = self.support_driver_map[self.driver_name](**kwargs)
+        self.prepare_driver(driver)
+        return _WebDriver(driver)
+
+    def prepare_driver(self, driver):
+        if isinstance(driver, webdriver.Chrome):
+            # 移除 `window.navigator.webdriver`.
+            driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+                "source": """
+                Object.defineProperty(navigator, 'webdriver', {
+                  get: () => undefined
+                })
+              """
+            })
+
+def make_options(driver_name, headless=True, disable_image=True, user_agent=None):
+    """
+    params headless: 是否隐藏界面
+    params disable_image: 是否关闭图像
+    params user_agent: 浏览器标志
+    """
+    if driver_name == 'chrome':
+        options = webdriver.ChromeOptions()
+        options.headless = headless
+        # 关闭 gpu 渲染
+        options.add_argument('--disable-gpu')
+        if user_agent:
+            options.add_argument(f"--user-agent={user_agent}")
+        if disable_image:
+            options.add_experimental_option('prefs', {'profile.default_content_setting_values': {'images': 2}})
+        # 规避检测
+        options.add_experimental_option('excludeSwitches', ['enable-automation', ])
+        return options
+
+    elif driver_name == 'firefox':
+        options = webdriver.FirefoxOptions()
+        options.headless = headless
+        if disable_image:
+            options.set_preference('permissions.default.image', 2)
+        if user_agent:
+            options.set_preference('general.useragent.override', user_agent)
+        return options
+```
+其中，`Browser` 类的 `driver` 方法用于创建 `webdriver` 实例，注意到其返回的并不是原生的 `selenium` 中 `webdriver` 实例，而是一个经过自定义的类，因为笔者有意为其实现一个特殊的方法，所以使用了代理类（其方法调用和 `selenium` 中的 `webdriver` 并无不同，只是多了一个新的方法），代码如下：
+```py
+class _WebDriver(object):
+
+    def __init__(self, driver: RemoteWebDriver):
+        self._driver = driver
+        self._is_idle = False
+
+    def __getattr__(self, item):
+        return getattr(self._driver, item)
+
+    def current_response(self, request):
+        """返回当前页面的 response 对象"""
+        return HtmlResponse(self.current_url,
+                            body=str.encode(self.page_source),
+                            encoding='utf-8',
+                            request=request)
+```
+
+# 6
+到此，终于到了最重要的一步：基于 `selenium` 的浏览器池实现，其实也就是进程池，只不过将初始化浏览器以及通过浏览器请求的操作交给了不同的进程而已。鉴于使用下载中间件的方式实现，因此可以将可配置属性放入 `scrapy` 项目中的`settings.py`文件中，初始化时候方便直接读取。这里先对可配置字段及其默认值说明：
+```py
+# 最小 driver 实例数量
+SELENIUM_MIN_DRIVERS = 3
+
+# 最大 driver 实例数量
+SELENIUM_MAX_DRIVERS = 5
+
+# 是否隐藏界面
+SELENIUM_HEADLESS = True
+
+# 是否关闭图像加载
+SELENIUM_DISABLE_IMAGE = True
+
+# driver 初始化时的执行路径
+SELENIUM_DRIVER_PATH = None
+
+# 浏览器名称
+SELENIUM_DRIVER_NAME = 'chrome'
+
+# 浏览器标志
+USER_AGENT = ...
+```
+
+接下来，就是中间件代码实现及其相应说明：
+```py
+import logging
+import threading
+
+from scrapy import signals
+from scrapy.http import Request, Response
+from selenium.webdriver.support.ui import WebDriverWait
+
+from scrapy_ajax_utils.selenium.browser import Browser
+from scrapy_ajax_utils.selenium.request import SeleniumRequest
+
+from twisted.internet import threads, reactor
+from twisted.python.threadpool import ThreadPool
+
+logger = logging.getLogger(__name__)
+
+
+class SeleniumDownloaderMiddleware(object):
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        settings = crawler.settings
+        min_drivers = settings.get('SELENIUM_MIN_DRIVERS', 3)
+        max_drivers = settings.get('SELENIUM_MAX_DRIVERS', 5)
+        # 初始化浏览器
+        browser = _make_browser_from_settings(settings)
+        dm = cls(browser, min_drivers, max_drivers)
+        # 绑定方法用于在爬虫结束后执行
+        crawler.signals.connect(dm.spider_closed, signal=signals.spider_closed)
+        return dm
+
+    def __init__(self, browser, min_drivers, max_drivers):
+        self._browser = browser
+        self._drivers = set()  # 存储启动的 driver 实例
+        self._data = threading.local()  # 使用 ThreadLocal 绑定线程与 driver
+        self._threadpool = ThreadPool(min_drivers, max_drivers)  # 创建线程池
+
+    def process_request(self, request, spider):
+        # 过滤非目标请求实例
+        if not isinstance(request, SeleniumRequest):
+            return
+
+        # 检测线程池是否启动
+        if not self._threadpool.started:
+            self._threadpool.start()
+
+        # 调用线程池执行浏览器请求
+        return threads.deferToThreadPool(
+            reactor, self._threadpool, self.download_by_driver, request, spider
+        )
+
+    def download_by_driver(self, request, spider):
+        driver = self.get_driver()
+        driver.get(request.url)
+
+        # 等待条件
+        if request.wait_until:
+            WebDriverWait(driver, request.wait_time).until(request.wait_until)
+
+        # 执行 JavaScript 并将执行结果放入 meta 中
+        if request.script:
+            request.meta['js_result'] = driver.execute_script(request.script)
+
+        # 调用自定制操作方法并检测返回值
+        if request.handler:
+            result = request.handler(driver, request, spider)
+            if isinstance(result, (Request, Response)):
+                return result
+
+        # 返回当前页面的 response 对象
+        return driver.current_response(request)
+
+    def get_driver(self):
+        """
+        获取当前线程绑定的 driver 对象
+        如果没有则创建新的对象
+        并绑定到当前线程中
+        同时添加到已启动 driver 中
+        最后返回
+        """
+        try:
+            driver = self._data.driver
+        except AttributeError:
+            driver = self._browser.driver()
+            self._drivers.add(driver)
+            self._data.driver = driver
+        return driver
+
+    def spider_closed(self):
+        """关闭所有启动的 driver 对象，并关闭线程池"""
+        for driver in self._drivers:
+            driver.quit()
+        logger.debug('all webdriver closed.')
+        self._threadpool.stop()
+
+
+def _make_browser_from_settings(settings):
+    headless = settings.getbool('SELENIUM_HEADLESS', True)
+    disable_image = settings.get('SELENIUM_DISABLE_IMAGE', True)
+    driver_name = settings.get('SELENIUM_DRIVER_NAME', 'chrome')
+    executable_path = settings.get('SELENIUM_DRIVER_PATH')
+    user_agent = settings.get('USER_AGENT')
+    return Browser(headless=headless,
+                   disable_image=disable_image,
+                   driver_name=driver_name,
+                   executable_path=executable_path,
+                   user_agent=user_agent)
+```
+
+# 7
+嫌代码写着麻烦？没关系，这里有一份已经写好的代码：https://github.com/kingron117/scrapy_ajax_utils   
+只需要 `pip install scrapy-ajax-utils` 即可食用~
+
+# 8
+本次代码实现主要参(chao)考(xi)了以下两个项目：
+1. https://github.com/scrapy-plugins/scrapy-headless
+2. https://github.com/clemfromspace/scrapy-selenium
